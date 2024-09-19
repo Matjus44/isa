@@ -14,7 +14,7 @@ class Sniffer
     private:
         pcap_t* init_sniffer(parser& parser);
         void build_filter(parser& parser, pcap_t* handle);
-        void capture_packets(pcap_t *handle);
+        void capture_packets(parser &parse ,pcap_t *handle);
 };
 
 #endif

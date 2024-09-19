@@ -13,7 +13,7 @@
 class PacketProcessing
 {
     public:
-        static void parse_frame(u_char *user, const struct pcap_pkthdr *header,const u_char *frame);
+        static void parse_packet(u_char *user, const struct pcap_pkthdr *header,const u_char *frame);
         static void print_timestamp(const struct pcap_pkthdr *header);
 };
 

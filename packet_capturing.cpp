@@ -7,7 +7,7 @@ void Sniffer::run_sniffer(parser &parser)
 {
     pcap_t* handle = init_sniffer(parser);
     build_filter(parser, handle);
-    capture_packets(handle);
+    capture_packets(parser, handle);
 }
 
 void Sniffer::run_pcap(parser &parser)
@@ -22,7 +22,7 @@ void Sniffer::run_pcap(parser &parser)
     }
 
     build_filter(parser,handle);
-    capture_packets(handle);
+    capture_packets(parser, handle);
 }
 
 // Initialize interface
@@ -85,9 +85,9 @@ void Sniffer::build_filter(parser &parser, pcap_t *handle)
 
 
 // Start capturing packets
-void Sniffer::capture_packets(pcap_t *handle)
+void Sniffer::capture_packets(parser &parser , pcap_t *handle)
 {
-    if (pcap_loop(handle, 0 , PacketProcessing::parse_frame, nullptr) < 0) 
+    if (pcap_loop(handle, 0 , PacketProcessing::parse_packet, reinterpret_cast<u_char*>(&parser)) < 0) 
     {
         std::cerr << "Error: Issue while capturing packets: " << pcap_geterr(handle) << std::endl;
         pcap_close(handle);

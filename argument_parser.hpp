@@ -3,9 +3,11 @@
 
 #include <iostream>
 #include <string.h>
+#include "stdio.h"
+#include "stdlib.h"
 
-class parser {
-
+class parser 
+{
     public:
         std::string interface = "";
         std::string pcap = "";

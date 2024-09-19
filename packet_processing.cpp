@@ -1,7 +1,12 @@
 #include "packet_processing.hpp"
 
-void PacketProcessing::parse_frame(u_char *user, const struct pcap_pkthdr *header, const u_char *frame)
+void PacketProcessing::parse_packet(u_char *user, const struct pcap_pkthdr *header, const u_char *frame)
 {
+    // Cast the user parameter back to a parser object
+    parser *parse = reinterpret_cast<parser*>(user);
+
+    std::cout << "Interface: " << parse->interface << std::endl;
+    std::cout << "PCAP file: " << parse->pcap << std::endl;
     (void) user;
     (void) frame;
     print_timestamp(header);
