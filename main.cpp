@@ -6,6 +6,8 @@ int main(int argc, char* argv[])
     parser parse;
     parse.parse_arguments(argc,argv);
 
+    
+
     Sniffer network_sniffer;
 
     if(parse.interface != "") 

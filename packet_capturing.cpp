@@ -21,7 +21,7 @@ void Sniffer::run_pcap(parser &parser)
         exit(EXIT_FAILURE);
     }
 
-    build_filter(parser,handle);
+    // build_filter(parser,handle);
     capture_packets(parser, handle);
 }
 
