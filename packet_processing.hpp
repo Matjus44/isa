@@ -29,6 +29,7 @@ class PacketProcessing
         static void print_ports(const u_char *frame, parser *parse);
         static void process_ipv4(const u_char *frame, parser *parse);
         static void process_ipv6(const u_char *frame, parser *parse);
+        static void print_identifier(const u_char *frame, parser *parse, u_int16_t type);
 };
 
 #endif
