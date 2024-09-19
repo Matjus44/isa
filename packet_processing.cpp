@@ -56,7 +56,7 @@ void PacketProcessing::print_ip(const u_char *frame, parser *parse)
     }
 }
 
-void PacketProcessing::process_ipv4(const u_char *frame, parser *parse)
+void PacketProcessing::process_ipv4_port(const u_char *frame)
 {
     auto ip4 = reinterpret_cast<const struct ip *>(frame + sizeof(struct ether_header));
 
@@ -64,29 +64,24 @@ void PacketProcessing::process_ipv4(const u_char *frame, parser *parse)
     if (ip4->ip_p == IPPROTO_UDP)
     {
         const struct udphdr *udp_header = reinterpret_cast<const struct udphdr *>(frame + sizeof(struct ether_header) + (ip4->ip_hl * 4));
-        if (parse->verbose)
-        {
-            std::cout << "SrcPort: UDP/" << ntohs(udp_header->uh_sport) << std::endl;
-            std::cout << "DstPort: UDP/" << ntohs(udp_header->uh_dport) << std::endl;
-        }
+        std::cout << "SrcPort: UDP/" << ntohs(udp_header->uh_sport) << std::endl;
+        std::cout << "DstPort: UDP/" << ntohs(udp_header->uh_dport) << std::endl;
+        
     }
 }
 
-void PacketProcessing::process_ipv6(const u_char *frame, parser *parse)
+void PacketProcessing::process_ipv6_port(const u_char *frame)
 {
     auto ip6 = reinterpret_cast<const struct ip6_hdr *>(frame + sizeof(struct ether_header)); // Get IPv6 header
 
     // Check the next header field to determine the protocol
     uint8_t next_header = ip6->ip6_nxt;
 
-    if (next_header == IPPROTO_TCP)
+    if (next_header == IPPROTO_UDP)
     {
-        const struct tcphdr *tcp_header = reinterpret_cast<const struct tcphdr *>(frame + sizeof(struct ether_header) + sizeof(struct ip6_hdr));
-        if (parse->verbose)
-        {
-            std::cout << "src port: " << ntohs(tcp_header->th_sport) << std::endl;
-            std::cout << "dst port: " << ntohs(tcp_header->th_dport) << std::endl;
-        }
+        const struct udphdr *udp_header = reinterpret_cast<const struct udphdr *>(frame + sizeof(struct ether_header) + sizeof(struct ip6_hdr));
+        std::cout << "SrcPort: UDP/" << ntohs(udp_header->uh_sport) << std::endl;
+        std::cout << "DstPort: UDP/" << ntohs(udp_header->uh_dport) << std::endl;
     }
 }
 
@@ -97,19 +92,21 @@ void PacketProcessing::print_ports(const u_char *frame, parser *parse)
     auto ether_type = ntohs(eth_header->ether_type);
 
     // Check the Ethernet type and print corresponding information
-    if (ether_type == ETHERTYPE_IP)
+    if (ether_type == ETHERTYPE_IP && parse->verbose == true)
     {
-        process_ipv4(frame, parse);
+        process_ipv4_port(frame);
     }
-    else if (ether_type == ETHERTYPE_IPV6)
+    else if (ether_type == ETHERTYPE_IPV6 && parse->verbose == true)
     {
-        process_ipv6(frame, parse);
+        process_ipv6_port(frame);
     }
-
-    print_identifier(frame, parse, ether_type);
+    if(parse->verbose)
+    {
+        print_identifier_and_flags(frame, ether_type);
+    }
 }
 
-void PacketProcessing::print_identifier(const u_char *frame, parser *parse, uint16_t type)
+void PacketProcessing::print_identifier_and_flags(const u_char *frame, uint16_t type)
 {
     const u_char *dns_header;
 
@@ -130,12 +127,30 @@ void PacketProcessing::print_identifier(const u_char *frame, parser *parse, uint
     uint16_t dns_identifier = ntohs(*(uint16_t *)dns_header);
 
     // Print the DNS identifier
-    if (parse->verbose)
-    {
-        std::cout << "Identifier: 0x" << std::hex << dns_identifier << std::dec << std::endl;
-    }
-    else
-    {
-        std::cout << "Identifier: 0x" << std::hex << dns_identifier << std::dec << " ";
-    }
+    std::cout << "Identifier: 0x" << std::hex << dns_identifier << std::dec << std::endl;
+
+    // Extract the flags from the DNS header (it's 16 bits starting at byte 2)
+    uint16_t flags = ntohs(*(uint16_t *)(dns_header + 2));
+    
+    uint8_t qr = (flags >> 15) & 0x01;   // QR: 1 bit
+    uint8_t opcode = (flags >> 11) & 0x0F; // Opcode: 4 bits
+    uint8_t aa = (flags >> 10) & 0x01;   // AA: 1 bit
+    uint8_t tc = (flags >> 9) & 0x01;    // TC: 1 bit
+    uint8_t rd = (flags >> 8) & 0x01;    // RD: 1 bit
+    uint8_t ra = (flags >> 7) & 0x01;    // RA: 1 bit
+    uint8_t ad = (flags >> 5) & 0x01;    // AD: 1 bit
+    uint8_t cd = (flags >> 4) & 0x01;    // CD: 1 bit
+    uint8_t rcode = flags & 0x0F;        // RCODE: 4 bits
+
+    // Print the flags
+    std::cout << "Flags: QR=" << (int)qr
+                << ", OPCODE=" << (int)opcode
+                << ", AA=" << (int)aa
+                << ", TC=" << (int)tc
+                << ", RD=" << (int)rd
+                << ", RA=" << (int)ra
+                << ", AD=" << (int)ad
+                << ", CD=" << (int)cd
+                << ", RCODE=" << (int)rcode
+                << std::endl;
 }

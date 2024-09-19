@@ -27,9 +27,9 @@ class PacketProcessing
         static void print_timestamp(const struct pcap_pkthdr *header,parser *parse);
         static void print_ip(const u_char *frame, parser *parse);
         static void print_ports(const u_char *frame, parser *parse);
-        static void process_ipv4(const u_char *frame, parser *parse);
-        static void process_ipv6(const u_char *frame, parser *parse);
-        static void print_identifier(const u_char *frame, parser *parse, u_int16_t type);
+        static void process_ipv4_port(const u_char *frame);
+        static void process_ipv6_port(const u_char *frame);
+        static void print_identifier_and_flags(const u_char *frame, u_int16_t type);
 };
 
 #endif
