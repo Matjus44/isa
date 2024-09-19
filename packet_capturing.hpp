@@ -9,6 +9,7 @@ class Sniffer
 {  
     public:
         void run_sniffer(parser& parser);
+        void run_pcap(parser &parser);
 
     private:
         pcap_t* init_sniffer(parser& parser);

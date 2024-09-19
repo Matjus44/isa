@@ -10,6 +10,21 @@ void Sniffer::run_sniffer(parser &parser)
     capture_packets(handle);
 }
 
+void Sniffer::run_pcap(parser &parser)
+{
+    pcap_t *handle;
+
+    handle = pcap_open_offline(parser.pcap.c_str(), errbuf);
+    if (handle == nullptr) 
+    {
+        std::cerr << "Error: Could not open PCAP file: " << errbuf << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    build_filter(parser,handle);
+    capture_packets(handle);
+}
+
 // Initialize interface
 pcap_t* Sniffer::init_sniffer(parser &parser)
 {
@@ -39,11 +54,14 @@ void Sniffer::build_filter(parser &parser, pcap_t *handle)
     bpf_u_int32 mask;
     struct bpf_program bpf_prog;
 
-    // Lookup network details (netmask, IP range, etc.) for the given interface
-    if (pcap_lookupnet(parser.interface.c_str(), &net, &mask, errbuf) == PCAP_ERROR)
+    if(parser.interface != "")
     {
-        std::cerr << "Error: Looking up network: " << errbuf << std::endl;
-        exit(EXIT_FAILURE);
+        // Lookup network details (netmask, IP range, etc.) for the given interface
+        if (pcap_lookupnet(parser.interface.c_str(), &net, &mask, errbuf) == PCAP_ERROR)
+        {
+            std::cerr << "Error: Looking up network: " << errbuf << std::endl;
+            exit(EXIT_FAILURE);
+        }
     }
 
     // Compile the filter expression
