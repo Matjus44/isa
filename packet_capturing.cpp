@@ -21,7 +21,7 @@ void Sniffer::run_pcap(parser &parser)
         exit(EXIT_FAILURE);
     }
 
-    // build_filter(parser,handle);
+    build_filter(parser,handle);
     capture_packets(parser, handle);
 }
 
@@ -48,7 +48,8 @@ pcap_t* Sniffer::init_sniffer(parser &parser)
 void Sniffer::build_filter(parser &parser, pcap_t *handle)
 {
     // Filter expression for DNS over UDP (port 53)
-    std::string filter = "udp port 53";
+    // std::string filter = "udp port 53";
+    std::string filter = "";
     
     bpf_u_int32 net;
     bpf_u_int32 mask;
