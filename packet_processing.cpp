@@ -8,7 +8,7 @@ void PacketProcessing::parse_packet(u_char *user, const struct pcap_pkthdr *head
     std::cout << parse->domains_file << std::endl;
     print_timestamp(header, parse);
     print_ip(frame, parse);
-    print_ports(frame, parse);
+    print_information(frame, parse);
 }
 
 void PacketProcessing::print_timestamp(const struct pcap_pkthdr *header, parser *parse)
@@ -66,7 +66,6 @@ void PacketProcessing::process_ipv4_port(const u_char *frame)
         const struct udphdr *udp_header = reinterpret_cast<const struct udphdr *>(frame + sizeof(struct ether_header) + (ip4->ip_hl * 4));
         std::cout << "SrcPort: UDP/" << ntohs(udp_header->uh_sport) << std::endl;
         std::cout << "DstPort: UDP/" << ntohs(udp_header->uh_dport) << std::endl;
-        
     }
 }
 
@@ -85,11 +84,12 @@ void PacketProcessing::process_ipv6_port(const u_char *frame)
     }
 }
 
-void PacketProcessing::print_ports(const u_char *frame, parser *parse)
+void PacketProcessing::print_information(const u_char *frame, parser *parse)
 {
     const struct ether_header *eth_header = reinterpret_cast<const struct ether_header *>(frame);
     // Get the Ethernet type
     auto ether_type = ntohs(eth_header->ether_type);
+    const u_char *dns_header = nullptr;
 
     // Check the Ethernet type and print corresponding information
     if (ether_type == ETHERTYPE_IP && parse->verbose == true)
@@ -100,13 +100,15 @@ void PacketProcessing::print_ports(const u_char *frame, parser *parse)
     {
         process_ipv6_port(frame);
     }
-    if(parse->verbose)
+    if (parse->verbose)
     {
-        print_identifier_and_flags(frame, ether_type);
+        dns_header = print_identifier_and_flags(frame, ether_type);
     }
+
+    print_dns_sections(dns_header);
 }
 
-void PacketProcessing::print_identifier_and_flags(const u_char *frame, uint16_t type)
+const u_char *PacketProcessing::print_identifier_and_flags(const u_char *frame, uint16_t type)
 {
     const u_char *dns_header;
 
@@ -114,13 +116,13 @@ void PacketProcessing::print_identifier_and_flags(const u_char *frame, uint16_t 
     {
         const struct ip *ip_header = (struct ip *)frame;
         int ip_header_len = ip_header->ip_hl * 4; // ip_hl is in 4-byte words
-        int udp_header_len = 8; // UDP header length is always 8 bytes
+        int udp_header_len = 8;                   // UDP header length is always 8 bytes
         dns_header = frame + ip_header_len + udp_header_len;
     }
     else if (type == ETHERTYPE_IPV6)
     {
         int ip6_header_len = 40; // IPv6 header is always 40 bytes
-        int udp_header_len = 8; // UDP header length is always 8 bytes
+        int udp_header_len = 8;  // UDP header length is always 8 bytes
         dns_header = frame + ip6_header_len + udp_header_len;
     }
 
@@ -131,26 +133,83 @@ void PacketProcessing::print_identifier_and_flags(const u_char *frame, uint16_t 
 
     // Extract the flags from the DNS header (it's 16 bits starting at byte 2)
     uint16_t flags = ntohs(*(uint16_t *)(dns_header + 2));
-    
-    uint8_t qr = (flags >> 15) & 0x01;   // QR: 1 bit
+
+    uint8_t qr = (flags >> 15) & 0x01;     // QR: 1 bit
     uint8_t opcode = (flags >> 11) & 0x0F; // Opcode: 4 bits
-    uint8_t aa = (flags >> 10) & 0x01;   // AA: 1 bit
-    uint8_t tc = (flags >> 9) & 0x01;    // TC: 1 bit
-    uint8_t rd = (flags >> 8) & 0x01;    // RD: 1 bit
-    uint8_t ra = (flags >> 7) & 0x01;    // RA: 1 bit
-    uint8_t ad = (flags >> 5) & 0x01;    // AD: 1 bit
-    uint8_t cd = (flags >> 4) & 0x01;    // CD: 1 bit
-    uint8_t rcode = flags & 0x0F;        // RCODE: 4 bits
+    uint8_t aa = (flags >> 10) & 0x01;     // AA: 1 bit
+    uint8_t tc = (flags >> 9) & 0x01;      // TC: 1 bit
+    uint8_t rd = (flags >> 8) & 0x01;      // RD: 1 bit
+    uint8_t ra = (flags >> 7) & 0x01;      // RA: 1 bit
+    uint8_t ad = (flags >> 5) & 0x01;      // AD: 1 bit
+    uint8_t cd = (flags >> 4) & 0x01;      // CD: 1 bit
+    uint8_t rcode = flags & 0x0F;          // RCODE: 4 bits
 
     // Print the flags
-    std::cout << "Flags: QR=" << (int)qr
-                << ", OPCODE=" << (int)opcode
-                << ", AA=" << (int)aa
-                << ", TC=" << (int)tc
-                << ", RD=" << (int)rd
-                << ", RA=" << (int)ra
-                << ", AD=" << (int)ad
-                << ", CD=" << (int)cd
-                << ", RCODE=" << (int)rcode
-                << std::endl;
+    std::cout << "Flags: QR=" << (int)qr << ", OPCODE=" << (int)opcode << ", AA=" << (int)aa << ", TC=" << (int)tc
+              << ", RD=" << (int)rd << ", RA=" << (int)ra << ", AD=" << (int)ad << ", CD=" << (int)cd << ", RCODE=" << (int)rcode
+              << std::endl;
+
+    return dns_header;
+}
+
+void PacketProcessing::print_dns_sections(const u_char *dns_header)
+{
+    const u_char *dns_ptr = dns_header + 12; // DNS hlavička má 12 bajtů
+    std::cout << "[Question Section]" << std::endl;
+
+    dns_ptr = print_question_section(dns_ptr, ntohs(*(uint16_t *)(dns_header + 4))); // počet dotazů v sekci Question
+}
+
+const u_char *PacketProcessing::print_question_section(const u_char *dns_ptr, uint16_t qdcount)
+{
+    for (int i = 0; i < qdcount; i++)
+    {
+        std::string domain_name = parse_domain_name(dns_ptr);
+        dns_ptr += domain_name.size() + 2;
+        uint16_t qtype = ntohs(*(uint16_t *)(dns_ptr));
+        dns_ptr += 2;
+        dns_ptr += 2;
+        std::cout << domain_name << " IN " << get_record_type(qtype) << std::endl;
+    }
+    return dns_ptr;
+}
+
+std::string PacketProcessing::get_record_type(uint16_t rtype)
+{
+    switch (rtype)
+    {
+        case 1:
+            return "A";
+        case 28:
+            return "AAAA";
+        case 2:
+            return "NS";
+        case 5:
+            return "CNAME";
+        case 15:
+            return "MX";
+        case 6:
+            return "SOA";
+        case 33:
+            return "SRV";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+std::string PacketProcessing::parse_domain_name(const u_char *dns_ptr)
+{
+    std::string domain_name;
+    while (*dns_ptr != 0)
+    {
+        int len = *dns_ptr;
+        dns_ptr++;
+        domain_name.append((const char *)dns_ptr, len);
+        dns_ptr += len;
+        if (*dns_ptr != 0)
+        {
+            domain_name.append(".");
+        }
+    }
+    return domain_name;
 }
