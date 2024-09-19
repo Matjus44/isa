@@ -5,6 +5,7 @@ ipk-sniffer
 
 .vscode
 /env
+dns-monitor
 
 ### C++ ###
 # Prerequisites
