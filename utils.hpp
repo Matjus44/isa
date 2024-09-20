@@ -5,6 +5,8 @@
 #include <string>       
 #include <cstdint>     
 #include <cstring>      
+#include <sstream>
+#include <arpa/inet.h>
 
 class Utils
 {
@@ -12,6 +14,7 @@ class Utils
         std::string get_class_type(uint16_t q_class);
         std::string get_record_type(uint16_t q_type);
         std::string parse_domain_name(const u_char *pointer);
+        std::string parse_rdata(const u_char *rdata_ptr, uint16_t rdlength, uint16_t q_type);
 };
 
 #endif

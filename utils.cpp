@@ -61,3 +61,28 @@ std::string Utils::get_class_type(uint16_t q_class)
             return "Unknown";
     }
 }
+
+std::string Utils::parse_rdata(const u_char *rdata_ptr, uint16_t rdlength, uint16_t q_type)
+{
+    std::stringstream rdata_str;
+
+    if (q_type == 1)  // A record (IPv4)
+    {
+        // IPv4 addresses are 4 bytes long
+        for (int i = 0; i < rdlength; ++i)
+        {
+            rdata_str << std::to_string(rdata_ptr[i]);
+            if (i < rdlength - 1) rdata_str << ".";
+        }
+    }
+    else if (q_type == 28)  // AAAA record (IPv6)
+    {
+        // IPv6 addresses are 16 bytes long
+        char buffer[INET6_ADDRSTRLEN];
+        inet_ntop(AF_INET6, rdata_ptr, buffer, sizeof(buffer));
+        rdata_str << buffer;
+    }
+    // Add support for more types (CNAME, MX, etc.) as needed
+
+    return rdata_str.str();
+}

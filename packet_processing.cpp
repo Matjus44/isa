@@ -4,8 +4,6 @@ void PacketProcessing::parse_packet(u_char *user, const struct pcap_pkthdr *head
 {
     // Cast the user parameter back to a parser object
     parser *parse = reinterpret_cast<parser *>(user);
-
-    std::cout << parse->domains_file << std::endl;
     print_timestamp(header, parse);
     print_ip(frame, parse);
     print_information(frame, parse);
@@ -148,27 +146,47 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
 {
     (void)frame;
     Utils utility_functions;
+    uint16_t an_count = ntohs(*(uint16_t *)(pointer + 6));  // specifying the number of resource records in the answer section.
     // uint16_t qd_count = ntohs(*(uint16_t *)(pointer + 4));  // specifying the number of entries in the question section.
-    // uint16_t an_count = ntohs(*(uint16_t *)(pointer + 6));  // specifying the number of resource records in the answer section.
     // uint16_t ns_count = ntohs(*(uint16_t *)(pointer + 8));  // specifying the number of name server resource records in the authority records section.
     // uint16_t ar_count = ntohs(*(uint16_t *)(pointer + 10)); // specifying the number of resource records in the additional records section
 
-    print_question_section(pointer, utility_functions);
-    
+    print_sections(pointer + 10, utility_functions, "question");
+    if(an_count >= 1)
+    {
+        print_sections(pointer + 16, utility_functions, "answer");
+    }
+    std::cout << "=================================================" << std::endl;
 }
 
-void PacketProcessing::print_question_section(const u_char *pointer, Utils utility_functions)
+void PacketProcessing::print_sections(const u_char *pointer, Utils utility_functions, std::string section)
 {
     // Parse the domain name (QNAME)
-    std::string q_name = utility_functions.parse_domain_name(pointer + 12);
-    const u_char *qtype_ptr = pointer + 12 + q_name.size();
-    uint16_t q_type = ntohs(*(uint16_t *)(qtype_ptr + 2));
-    uint16_t q_class = ntohs(*(uint16_t *)(qtype_ptr + 4));
+    std::string name = utility_functions.parse_domain_name(pointer + 2);
+    const u_char *qtype_ptr = pointer + name.size();
+    uint16_t typeos = ntohs(*(uint16_t *)(qtype_ptr + 4));
+    uint16_t classos = ntohs(*(uint16_t *)(qtype_ptr + 6));
 
     // Convert QTYPE to a readable string
-    std::string type_str = utility_functions.get_record_type(q_type);
-    std::string class_str = utility_functions.get_class_type(q_class);
+    std::string type_str = utility_functions.get_record_type(typeos);
+    std::string class_str = utility_functions.get_class_type(classos);
 
-    std::cout << "[Question Section]" << std::endl;
-    std::cout << q_name << ". " << class_str << " " << type_str << std::endl;
+    if(section == "question")
+    {
+        std::cout << "[Question Section]" << std::endl;
+        std::cout << name << ". " << class_str << " " << type_str << std::endl << std::endl;
+    }
+    else if(section == "answer")
+    {
+        // Skip the NAME, TYPE, CLASS, and TTL
+        uint32_t ttl = ntohl(*(uint32_t *)(qtype_ptr + 8)); // TTL is 4 bytes
+        uint16_t rdlength = ntohs(*(uint16_t *)(qtype_ptr + 10)); // RDLENGTH is 2 bytes
+
+        const u_char *rdata_ptr = qtype_ptr + 10;
+
+        std::string rdata = utility_functions.parse_rdata(rdata_ptr, rdlength, typeos);
+
+        std::cout << "[Answer Section]" << std::endl;
+        std::cout << name << ". " << ttl << " " << type_str << " " << class_str << " " << rdata << std::endl;
+    }
 }
