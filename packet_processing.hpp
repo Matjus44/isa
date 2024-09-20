@@ -30,11 +30,6 @@ class PacketProcessing
         static void process_ipv4_port(const u_char *frame);
         static void process_ipv6_port(const u_char *frame);
         static const u_char* print_identifier_and_flags(const u_char *frame, u_int16_t type);
-
-        static void print_dns_sections(const u_char *dns_header);
-        static const u_char* print_question_section(const u_char *dns_ptr, uint16_t qdcount);
-        static std::string get_record_type(uint16_t rtype);
-        static std::string parse_domain_name(const u_char *dns_ptr);
 };
 
 #endif

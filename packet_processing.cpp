@@ -26,21 +26,25 @@ void PacketProcessing::print_timestamp(const struct pcap_pkthdr *header, parser 
 
 void PacketProcessing::print_ip(const u_char *frame, parser *parse)
 {
-    // Buffers to store the IP addresses in human-readable form
-    char src_ip[INET6_ADDRSTRLEN];
-    char dst_ip[INET6_ADDRSTRLEN];
+    // Lokální kopie ukazatele
+    const u_char *ip_frame = frame + 14; // Přeskočení Ethernetové hlavičky (14 bajtů)
 
-    uint8_t ip_version = (frame[0] >> 4); // First 4 bits represent the IP version
+    // Buffery pro uložení IP adres ve čitelné podobě
+    char src_ip[INET6_ADDRSTRLEN] = {0};
+    char dst_ip[INET6_ADDRSTRLEN] = {0};
+
+    // Získání verze IP (4 nebo 6)
+    uint8_t ip_version = (ip_frame[0] >> 4); // První 4 bity představují verzi IP
 
     if (ip_version == 4)
     {
-        const struct ip *ip_header = (struct ip *)frame;
+        const struct ip *ip_header = (struct ip *)ip_frame;
         inet_ntop(AF_INET, &(ip_header->ip_src), src_ip, INET_ADDRSTRLEN);
         inet_ntop(AF_INET, &(ip_header->ip_dst), dst_ip, INET_ADDRSTRLEN);
     }
     else if (ip_version == 6)
     {
-        const struct ip6_hdr *ip6_header = (struct ip6_hdr *)frame;
+        const struct ip6_hdr *ip6_header = (struct ip6_hdr *)ip_frame;
         inet_ntop(AF_INET6, &(ip6_header->ip6_src), src_ip, INET6_ADDRSTRLEN);
         inet_ntop(AF_INET6, &(ip6_header->ip6_dst), dst_ip, INET6_ADDRSTRLEN);
     }
@@ -89,7 +93,7 @@ void PacketProcessing::print_information(const u_char *frame, parser *parse)
     const struct ether_header *eth_header = reinterpret_cast<const struct ether_header *>(frame);
     // Get the Ethernet type
     auto ether_type = ntohs(eth_header->ether_type);
-    const u_char *dns_header = nullptr;
+    // const u_char *dns_header = nullptr;
 
     // Check the Ethernet type and print corresponding information
     if (ether_type == ETHERTYPE_IP && parse->verbose == true)
@@ -100,12 +104,15 @@ void PacketProcessing::print_information(const u_char *frame, parser *parse)
     {
         process_ipv6_port(frame);
     }
+    else
+    {
+        std::cout << "Error" << std::endl;
+    }
     if (parse->verbose)
     {
-        dns_header = print_identifier_and_flags(frame, ether_type);
+        // dns_header = 
+        print_identifier_and_flags(frame, ether_type);
     }
-
-    print_dns_sections(dns_header);
 }
 
 const u_char *PacketProcessing::print_identifier_and_flags(const u_char *frame, uint16_t type)
@@ -147,69 +154,7 @@ const u_char *PacketProcessing::print_identifier_and_flags(const u_char *frame, 
     // Print the flags
     std::cout << "Flags: QR=" << (int)qr << ", OPCODE=" << (int)opcode << ", AA=" << (int)aa << ", TC=" << (int)tc
               << ", RD=" << (int)rd << ", RA=" << (int)ra << ", AD=" << (int)ad << ", CD=" << (int)cd << ", RCODE=" << (int)rcode
-              << std::endl;
+              << std::endl << std::endl;
 
     return dns_header;
-}
-
-void PacketProcessing::print_dns_sections(const u_char *dns_header)
-{
-    const u_char *dns_ptr = dns_header + 12; // DNS hlavička má 12 bajtů
-    std::cout << "[Question Section]" << std::endl;
-
-    dns_ptr = print_question_section(dns_ptr, ntohs(*(uint16_t *)(dns_header + 4))); // počet dotazů v sekci Question
-}
-
-const u_char *PacketProcessing::print_question_section(const u_char *dns_ptr, uint16_t qdcount)
-{
-    for (int i = 0; i < qdcount; i++)
-    {
-        std::string domain_name = parse_domain_name(dns_ptr);
-        dns_ptr += domain_name.size() + 2;
-        uint16_t qtype = ntohs(*(uint16_t *)(dns_ptr));
-        dns_ptr += 2;
-        dns_ptr += 2;
-        std::cout << domain_name << " IN " << get_record_type(qtype) << std::endl;
-    }
-    return dns_ptr;
-}
-
-std::string PacketProcessing::get_record_type(uint16_t rtype)
-{
-    switch (rtype)
-    {
-        case 1:
-            return "A";
-        case 28:
-            return "AAAA";
-        case 2:
-            return "NS";
-        case 5:
-            return "CNAME";
-        case 15:
-            return "MX";
-        case 6:
-            return "SOA";
-        case 33:
-            return "SRV";
-        default:
-            return "UNKNOWN";
-    }
-}
-
-std::string PacketProcessing::parse_domain_name(const u_char *dns_ptr)
-{
-    std::string domain_name;
-    while (*dns_ptr != 0)
-    {
-        int len = *dns_ptr;
-        dns_ptr++;
-        domain_name.append((const char *)dns_ptr, len);
-        dns_ptr += len;
-        if (*dns_ptr != 0)
-        {
-            domain_name.append(".");
-        }
-    }
-    return domain_name;
 }

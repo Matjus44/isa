@@ -7,6 +7,7 @@ ipk-sniffer
 /env
 dns-monitor
 capture.pcap
+dns.pcap
 
 ### C++ ###
 # Prerequisites
