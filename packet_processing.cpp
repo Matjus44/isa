@@ -95,10 +95,9 @@ void PacketProcessing::print_information(const u_char *frame, parser *parse)
     if (parse->verbose)
     {
         dns_header = print_identifier_and_flags(frame, ether_type);
-        (void)dns_header;
     }
 
-    // print_dns_information(frame,ether_type);
+    print_dns_information(frame,dns_header);
 }
 
 const u_char *PacketProcessing::print_identifier_and_flags(const u_char *frame, uint16_t type)
@@ -142,8 +141,34 @@ const u_char *PacketProcessing::print_identifier_and_flags(const u_char *frame, 
               << ", RD=" << (int)rd << ", RA=" << (int)ra << ", AD=" << (int)ad << ", CD=" << (int)cd << ", RCODE=" << (int)rcode
               << std::endl << std::endl;
 
-    uint16_t question_count = ntohs(*(uint16_t *)(dns_header + 4));
-    std::cout << "Question Count (qdcount): " << question_count << std::endl;
-
     return dns_header;
+}
+
+void PacketProcessing::print_dns_information(const u_char *frame, const u_char *pointer)
+{
+    (void)frame;
+    Utils utility_functions;
+    // uint16_t qd_count = ntohs(*(uint16_t *)(pointer + 4));  // specifying the number of entries in the question section.
+    // uint16_t an_count = ntohs(*(uint16_t *)(pointer + 6));  // specifying the number of resource records in the answer section.
+    // uint16_t ns_count = ntohs(*(uint16_t *)(pointer + 8));  // specifying the number of name server resource records in the authority records section.
+    // uint16_t ar_count = ntohs(*(uint16_t *)(pointer + 10)); // specifying the number of resource records in the additional records section
+
+    print_question_section(pointer, utility_functions);
+    
+}
+
+void PacketProcessing::print_question_section(const u_char *pointer, Utils utility_functions)
+{
+    // Parse the domain name (QNAME)
+    std::string q_name = utility_functions.parse_domain_name(pointer + 12);
+    const u_char *qtype_ptr = pointer + 12 + q_name.size();
+    uint16_t q_type = ntohs(*(uint16_t *)(qtype_ptr + 2));
+    uint16_t q_class = ntohs(*(uint16_t *)(qtype_ptr + 4));
+
+    // Convert QTYPE to a readable string
+    std::string type_str = utility_functions.get_record_type(q_type);
+    std::string class_str = utility_functions.get_class_type(q_class);
+
+    std::cout << "[Question Section]" << std::endl;
+    std::cout << q_name << ". " << class_str << " " << type_str << std::endl;
 }

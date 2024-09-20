@@ -2,6 +2,7 @@
 #define PACKET_PROCESSING_HPP
 
 #include "argument_parser.hpp"
+#include "utils.hpp"
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -30,6 +31,8 @@ class PacketProcessing
         static void process_ipv4_port(const u_char *frame);
         static void process_ipv6_port(const u_char *frame);
         static const u_char* print_identifier_and_flags(const u_char *frame, u_int16_t type);
+        static void print_dns_information(const u_char *frame, const u_char *pointer);
+        static void print_question_section(const u_char *pointer, Utils utility_functions);
 };
 
 #endif
