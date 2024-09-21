@@ -3,6 +3,7 @@
 
 ipk-sniffer
 
+test_files
 .vscode
 /env
 dns-monitor
@@ -13,6 +14,7 @@ wireshark2.pcap
 wireshark3.pcap
 onepacket.pcap
 onepacket2.pcap
+Answerpacket.pcap
 
 ### C++ ###
 # Prerequisites

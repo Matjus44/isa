@@ -1,22 +1,55 @@
 #include "utils.hpp"
 
-std::string Utils::parse_domain_name(const u_char *pointer)
+std::string Utils::parse_domain_name(const u_char *pointer, const u_char *packet_start)
 {
     std::string domain_name;
     const u_char *current_ptr = pointer;
-
+    
+    // Debug: Print raw bytes in hexadecimal format before parsing
+    std::cout << "Raw domain name bytes in hex: ";
     while (*current_ptr != 0)
     {
-        int label_length = *current_ptr; // First byte is the length of the label
+        std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)(*current_ptr) << " ";
         current_ptr++;
+    }
+    std::cout << "00" << std::endl; // Print the null terminator (0x00) for clarity
 
-        domain_name.append((const char *)current_ptr, label_length);
-        current_ptr += label_length;
-
-        if (*current_ptr != 0)  // Add a dot if this is not the end of the name
+    // Reset the pointer to start parsing the domain name
+    current_ptr = pointer;
+    
+    bool is_compressed = false; // Flag to check if name is compressed
+    while (*current_ptr != 0)
+    {
+        if ((*current_ptr & 0xC0) == 0xC0)
         {
-            domain_name.append(".");
+            // Handle compressed name
+            uint16_t offset = ntohs(*(uint16_t *)current_ptr) & 0x3FFF; // Extract the 14-bit offset
+            current_ptr = packet_start + offset; // Jump to the offset within the packet
+            is_compressed = true;
+
+            // Parse the domain name at the new location
+            domain_name.append(parse_domain_name(current_ptr, packet_start));
+            break; // Stop after compression is resolved
         }
+        else
+        {
+            int label_length = *current_ptr; // First byte is the length of the label
+            current_ptr++;
+
+            domain_name.append((const char *)current_ptr, label_length);
+            current_ptr += label_length;
+
+            if (*current_ptr != 0)  // Add a dot if this is not the end of the name
+            {
+                domain_name.append(".");
+            }
+        }
+    }
+
+    // If it was a compressed name, just return the parsed result
+    if (is_compressed)
+    {
+        return domain_name;
     }
 
     return domain_name;

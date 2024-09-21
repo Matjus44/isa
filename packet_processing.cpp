@@ -150,20 +150,22 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
     // uint16_t qd_count = ntohs(*(uint16_t *)(pointer + 4));  // specifying the number of entries in the question section.
     // uint16_t ns_count = ntohs(*(uint16_t *)(pointer + 8));  // specifying the number of name server resource records in the authority records section.
     // uint16_t ar_count = ntohs(*(uint16_t *)(pointer + 10)); // specifying the number of resource records in the additional records section
-
-    print_sections(pointer + 10, utility_functions, "question");
     if(an_count >= 1)
     {
-        print_sections(pointer + 16, utility_functions, "answer");
+        print_sections(pointer + 10, utility_functions, true, frame);
+    }
+    else
+    {
+        print_sections(pointer + 10, utility_functions, false, frame);
     }
     std::cout << "=================================================" << std::endl;
 }
 
-void PacketProcessing::print_sections(const u_char *pointer, Utils utility_functions, std::string section)
+void PacketProcessing::print_sections(const u_char *pointer, Utils utility_functions, bool answer, const u_char *frame)
 {
-    // Parse the domain name (QNAME)
-    std::string name = utility_functions.parse_domain_name(pointer + 2);
+    std::string name = utility_functions.parse_domain_name(pointer + 2, frame);
     const u_char *qtype_ptr = pointer + name.size();
+
     uint16_t typeos = ntohs(*(uint16_t *)(qtype_ptr + 4));
     uint16_t classos = ntohs(*(uint16_t *)(qtype_ptr + 6));
 
@@ -171,22 +173,14 @@ void PacketProcessing::print_sections(const u_char *pointer, Utils utility_funct
     std::string type_str = utility_functions.get_record_type(typeos);
     std::string class_str = utility_functions.get_class_type(classos);
 
-    if(section == "question")
+    std::cout << "[Question Section]" << std::endl;
+    std::cout << name << ". " << class_str << " " << type_str << std::endl << std::endl;
+    
+    if(answer == true)
     {
-        std::cout << "[Question Section]" << std::endl;
-        std::cout << name << ". " << class_str << " " << type_str << std::endl << std::endl;
+        uint16_t name_2 = ntohs(*(uint16_t *)(qtype_ptr + 8));
+        std::cout << name_2 << std::endl;
     }
-    else if(section == "answer")
-    {
-        // Skip the NAME, TYPE, CLASS, and TTL
-        uint32_t ttl = ntohl(*(uint32_t *)(qtype_ptr + 8)); // TTL is 4 bytes
-        uint16_t rdlength = ntohs(*(uint16_t *)(qtype_ptr + 10)); // RDLENGTH is 2 bytes
 
-        const u_char *rdata_ptr = qtype_ptr + 10;
-
-        std::string rdata = utility_functions.parse_rdata(rdata_ptr, rdlength, typeos);
-
-        std::cout << "[Answer Section]" << std::endl;
-        std::cout << name << ". " << ttl << " " << type_str << " " << class_str << " " << rdata << std::endl;
-    }
+    exit(0);
 }
