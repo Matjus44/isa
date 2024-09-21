@@ -150,19 +150,16 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
     // uint16_t qd_count = ntohs(*(uint16_t *)(pointer + 4));  // specifying the number of entries in the question section.
     // uint16_t ns_count = ntohs(*(uint16_t *)(pointer + 8));  // specifying the number of name server resource records in the authority records section.
     // uint16_t ar_count = ntohs(*(uint16_t *)(pointer + 10)); // specifying the number of resource records in the additional records section
-    if(an_count >= 1)
-    {
-        print_sections(pointer + 10, utility_functions, true, frame);
-    }
-    else
-    {
-        print_sections(pointer + 10, utility_functions, false, frame);
-    }
+    
+    print_sections(pointer + 10, utility_functions, an_count, frame);
+    
+    
     std::cout << "=================================================" << std::endl;
 }
 
-void PacketProcessing::print_sections(const u_char *pointer, Utils utility_functions, bool answer, const u_char *frame)
+void PacketProcessing::print_sections(const u_char *pointer, Utils utility_functions, uint16_t an_count, const u_char *frame)
 {
+    std::cout << "[Question Section]" << std::endl;
     std::string name = utility_functions.parse_domain_name(pointer + 2, frame);
     const u_char *qtype_ptr = pointer + name.size();
 
@@ -173,14 +170,39 @@ void PacketProcessing::print_sections(const u_char *pointer, Utils utility_funct
     std::string type_str = utility_functions.get_record_type(typeos);
     std::string class_str = utility_functions.get_class_type(classos);
 
-    std::cout << "[Question Section]" << std::endl;
     std::cout << name << ". " << class_str << " " << type_str << std::endl << std::endl;
     
-    if(answer == true)
+    if(an_count != 0)
     {
-        uint16_t name_2 = ntohs(*(uint16_t *)(qtype_ptr + 8));
-        std::cout << name_2 << std::endl;
+        std::cout << "[Answer Section]" << std::endl;
     }
 
-    exit(0);
+    while(an_count > 0)
+    {
+        uint16_t a_name = ntohs(*(uint16_t *)(qtype_ptr + 8));
+        uint8_t indicator = (a_name >> 8) & 0xFF; 
+        uint8_t offset = a_name & 0xFF; 
+        std::string domain_name;
+        if (indicator == 0xc0)
+        {
+            const u_char *compressed_name_ptr = pointer + offset - 10;
+            domain_name = utility_functions.parse_domain_name(compressed_name_ptr, frame);
+        }
+        else
+        {
+            std::cout << "Not Compressed" << std::endl;
+
+        }
+
+        uint16_t a_type = ntohs(*(uint16_t *)(qtype_ptr + 10));
+        uint16_t a_class = ntohs(*(uint16_t *)(qtype_ptr + 12));
+        uint32_t a_ttl = ntohs(*(uint32_t *)(qtype_ptr + 16));
+        uint16_t a_lenght = ntohs(*(uint16_t *)(qtype_ptr + 18));
+        std::string rdata = utility_functions.get_rdata_string(qtype_ptr + 20,a_lenght,a_type);
+
+        std::cout << domain_name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type) << " " << rdata << std::endl;
+
+        an_count = an_count - 1;
+        qtype_ptr = qtype_ptr + 12 + a_lenght;
+    }
 }

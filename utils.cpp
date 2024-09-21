@@ -95,27 +95,35 @@ std::string Utils::get_class_type(uint16_t q_class)
     }
 }
 
-std::string Utils::parse_rdata(const u_char *rdata_ptr, uint16_t rdlength, uint16_t q_type)
+std::string Utils::get_rdata_string(const u_char *rdata_ptr, uint16_t a_length, uint16_t a_type)
 {
-    std::stringstream rdata_str;
+    std::stringstream rdata_stream;
 
-    if (q_type == 1)  // A record (IPv4)
+    if (a_type == 1)  // Type A (IPv4)
     {
-        // IPv4 addresses are 4 bytes long
-        for (int i = 0; i < rdlength; ++i)
+        // Convert RDATA from binary to a human-readable IPv4 address
+        char ipv4[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, rdata_ptr, ipv4, INET_ADDRSTRLEN);
+        rdata_stream << ipv4;
+    }
+    else if (a_type == 28)  // Type AAAA (IPv6)
+    {
+        // Convert RDATA from binary to a human-readable IPv6 address
+        char ipv6[INET6_ADDRSTRLEN];
+        inet_ntop(AF_INET6, rdata_ptr, ipv6, INET6_ADDRSTRLEN);
+        rdata_stream << ipv6;
+    }
+    else
+    {
+        // If it's not an IP address, just return the raw RDATA in hexadecimal
+        for (int i = 0; i < a_length; ++i)
         {
-            rdata_str << std::to_string(rdata_ptr[i]);
-            if (i < rdlength - 1) rdata_str << ".";
+            rdata_stream << std::hex << std::setw(2) << std::setfill('0') << (int)rdata_ptr[i];
+            if (i < a_length - 1)
+            {
+                rdata_stream << " ";
+            }
         }
     }
-    else if (q_type == 28)  // AAAA record (IPv6)
-    {
-        // IPv6 addresses are 16 bytes long
-        char buffer[INET6_ADDRSTRLEN];
-        inet_ntop(AF_INET6, rdata_ptr, buffer, sizeof(buffer));
-        rdata_str << buffer;
-    }
-    // Add support for more types (CNAME, MX, etc.) as needed
-
-    return rdata_str.str();
+    return rdata_stream.str();  // Return the final RDATA string
 }
