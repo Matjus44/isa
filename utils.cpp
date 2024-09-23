@@ -1,59 +1,61 @@
 #include "utils.hpp"
 
-std::string Utils::parse_domain_name(const u_char *pointer, const u_char *packet_start)
+std::pair<std::string, int> Utils::parse_domain_name(const u_char *beginning_of_section, const u_char *packet_start)
 {
     std::string domain_name;
-    const u_char *current_ptr = pointer;
-    
-    // Debug: Print raw bytes in hexadecimal format before parsing
-    std::cout << "Raw domain name bytes in hex: ";
-    while (*current_ptr != 0)
-    {
-        std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)(*current_ptr) << " ";
-        current_ptr++;
-    }
-    std::cout << "00" << std::endl; // Print the null terminator (0x00) for clarity
+    const u_char *current_ptr = beginning_of_section;
+    int lenght = 0;
+    // Print the entire section in hexadecimal
+    // std::cout << "Hex dump of the section: ";
+    // for (const u_char *ptr = beginning_of_section; *ptr != 0; ++ptr)
+    // {
+    //     std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)*ptr << " ";
+    // }
 
-    // Reset the pointer to start parsing the domain name
-    current_ptr = pointer;
-    
-    bool is_compressed = false; // Flag to check if name is compressed
     while (*current_ptr != 0)
     {
-        if ((*current_ptr & 0xC0) == 0xC0)
+        if (*current_ptr == 0xc0)
         {
-            // Handle compressed name
-            uint16_t offset = ntohs(*(uint16_t *)current_ptr) & 0x3FFF; // Extract the 14-bit offset
-            current_ptr = packet_start + offset; // Jump to the offset within the packet
-            is_compressed = true;
+            const u_char *offset = current_ptr + 1;
+            std::cout << "Reference pointer: 0x" << std::hex << std::setw(2) << std::setfill('0') << (int)*offset << std::endl;
 
-            // Parse the domain name at the new location
-            domain_name.append(parse_domain_name(current_ptr, packet_start));
-            break; // Stop after compression is resolved
+            // Add offset with the beginning of the raw packet
+            current_ptr = packet_start + *offset;
+            std::cout << "Pointer after reference: 0x" << std::hex << std::setw(2) << std::setfill('0') << (int)*current_ptr << std::endl;
+
+            while (*current_ptr != 0)
+            {
+                int label_length = *current_ptr;
+                current_ptr++;
+                domain_name.append((const char *)current_ptr, label_length);
+                current_ptr += label_length;
+
+                if (*current_ptr != 0)
+                {
+                    domain_name.append(".");
+                }
+            }
+            
+            lenght = lenght + 2;
+            break;
         }
         else
         {
-            int label_length = *current_ptr; // First byte is the length of the label
+            int label_length = *current_ptr;
             current_ptr++;
-
             domain_name.append((const char *)current_ptr, label_length);
             current_ptr += label_length;
-
-            if (*current_ptr != 0)  // Add a dot if this is not the end of the name
+            lenght = lenght + label_length;
+            if (*current_ptr != 0)
             {
                 domain_name.append(".");
             }
         }
     }
 
-    // If it was a compressed name, just return the parsed result
-    if (is_compressed)
-    {
-        return domain_name;
-    }
-
-    return domain_name;
+    return std::make_pair(domain_name, lenght);
 }
+
 
 std::string Utils::get_record_type(uint16_t q_type)
 {
@@ -95,9 +97,10 @@ std::string Utils::get_class_type(uint16_t q_class)
     }
 }
 
-std::string Utils::get_rdata_string(const u_char *rdata_ptr, uint16_t a_length, uint16_t a_type)
+std::string Utils::get_rdata_string(const u_char *rdata_ptr, uint16_t a_length, uint16_t a_type, const u_char *frame)
 {
     std::stringstream rdata_stream;
+    (void)frame;
 
     if (a_type == 1)  // Type A (IPv4)
     {
@@ -115,7 +118,7 @@ std::string Utils::get_rdata_string(const u_char *rdata_ptr, uint16_t a_length, 
     }
     else
     {
-        // If it's not an IP address, just return the raw RDATA in hexadecimal
+        // For unsupported or unknown types, just return the raw RDATA in hexadecimal
         for (int i = 0; i < a_length; ++i)
         {
             rdata_stream << std::hex << std::setw(2) << std::setfill('0') << (int)rdata_ptr[i];
@@ -125,5 +128,17 @@ std::string Utils::get_rdata_string(const u_char *rdata_ptr, uint16_t a_length, 
             }
         }
     }
+
     return rdata_stream.str();  // Return the final RDATA string
+}
+
+int Utils::get_lenght(const u_char *beginning)
+{
+    int lenght = 0;
+    while(beginning != 0)
+    {
+        lenght = lenght + 1;
+    }
+
+    return lenght;
 }

@@ -7,14 +7,6 @@ test_files
 .vscode
 /env
 dns-monitor
-capture.pcap
-dns.pcap
-wireshark.pcapng
-wireshark2.pcap
-wireshark3.pcap
-onepacket.pcap
-onepacket2.pcap
-Answerpacket.pcap
 
 ### C++ ###
 # Prerequisites

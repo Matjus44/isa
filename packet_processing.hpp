@@ -20,7 +20,6 @@
 #include <pcap.h>
 #include <netinet/igmp.h> // For IGMP header
 
-
 class PacketProcessing
 {
     public:
@@ -30,8 +29,8 @@ class PacketProcessing
         static void print_information(const u_char *frame, parser *parse);
         static void process_ipv4_port(const u_char *frame);
         static void process_ipv6_port(const u_char *frame);
-        static const u_char* print_identifier_and_flags(const u_char *frame, u_int16_t type);
-        static void print_dns_information(const u_char *frame, const u_char *pointer);
+        static std::pair<const u_char*, uint8_t> print_identifier_and_flags(const u_char *frame, u_int16_t type, parser *parse);
+        static void print_dns_information(const u_char *frame, const u_char *pointer, parser *parse, uint8_t qr);
         static void  print_sections(const u_char *pointer, Utils utility_functions, uint16_t an_count, const u_char *frame);
 };
 

@@ -49,7 +49,7 @@ void PacketProcessing::print_ip(const u_char *frame, parser *parse)
     }
     else
     {
-        std::cout << "SrcIP: " << src_ip << "  " << "DstIP: " << dst_ip << " ";
+        std::cout << "SrcIP: " << src_ip << " -> " << "DstIP: " << dst_ip << " ";
     }
 }
 
@@ -75,7 +75,6 @@ void PacketProcessing::print_information(const u_char *frame, parser *parse)
     const struct ether_header *eth_header = reinterpret_cast<const struct ether_header *>(frame);
     // Get the Ethernet type
     auto ether_type = ntohs(eth_header->ether_type);
-    const u_char *dns_header = nullptr;
 
     // Check the Ethernet type and print corresponding information
     if (ether_type == ETHERTYPE_IP && parse->verbose == true)
@@ -86,19 +85,12 @@ void PacketProcessing::print_information(const u_char *frame, parser *parse)
     {
         process_ipv6_port(frame);
     }
-    else
-    {
-        std::cout << "Error" << std::endl;
-    }
-    if (parse->verbose)
-    {
-        dns_header = print_identifier_and_flags(frame, ether_type);
-    }
 
-    print_dns_information(frame,dns_header);
+    auto result = print_identifier_and_flags(frame, ether_type, parse);
+    print_dns_information(frame,result.first,parse,result.second);
 }
 
-const u_char *PacketProcessing::print_identifier_and_flags(const u_char *frame, uint16_t type)
+std::pair<const u_char*, uint8_t> PacketProcessing::print_identifier_and_flags(const u_char *frame, uint16_t type, parser *parse)
 {
     const u_char *dns_header;
 
@@ -119,90 +111,89 @@ const u_char *PacketProcessing::print_identifier_and_flags(const u_char *frame, 
         dns_header = ip_frame + ip6_header_len + udp_header_len;
     }
 
-    uint16_t dns_identifier = ntohs(*(uint16_t *)dns_header);
-    std::cout << "Identifier: 0x" << std::hex << std::setw(4) << std::setfill('0') << dns_identifier << std::dec << std::endl;
-
-
     uint16_t flags = ntohs(*(uint16_t *)(dns_header + 2));
-
     uint8_t qr = (flags >> 15) & 0x01;     // QR: 1 bit
-    uint8_t opcode = (flags >> 11) & 0x0F; // Opcode: 4 bits
-    uint8_t aa = (flags >> 10) & 0x01;     // AA: 1 bit
-    uint8_t tc = (flags >> 9) & 0x01;      // TC: 1 bit
-    uint8_t rd = (flags >> 8) & 0x01;      // RD: 1 bit
-    uint8_t ra = (flags >> 7) & 0x01;      // RA: 1 bit
-    uint8_t ad = (flags >> 5) & 0x01;      // AD: 1 bit
-    uint8_t cd = (flags >> 4) & 0x01;      // CD: 1 bit
-    uint8_t rcode = flags & 0x0F;          // RCODE: 4 bits
 
-    std::cout << "Flags: QR=" << (int)qr << ", OPCODE=" << (int)opcode << ", AA=" << (int)aa << ", TC=" << (int)tc
-              << ", RD=" << (int)rd << ", RA=" << (int)ra << ", AD=" << (int)ad << ", CD=" << (int)cd << ", RCODE=" << (int)rcode
-              << std::endl << std::endl;
-
-    return dns_header;
+    if(parse->verbose)
+    {
+        uint16_t dns_identifier = ntohs(*(uint16_t *)dns_header);
+        uint8_t opcode = (flags >> 11) & 0x0F; // Opcode: 4 bits
+        uint8_t aa = (flags >> 10) & 0x01;     // AA: 1 bit
+        uint8_t tc = (flags >> 9) & 0x01;      // TC: 1 bit
+        uint8_t rd = (flags >> 8) & 0x01;      // RD: 1 bit
+        uint8_t ra = (flags >> 7) & 0x01;      // RA: 1 bit
+        uint8_t ad = (flags >> 5) & 0x01;      // AD: 1 bit
+        uint8_t cd = (flags >> 4) & 0x01;      // CD: 1 bit
+        uint8_t rcode = flags & 0x0F;          // RCODE: 4 bits
+        
+        std::cout << "Identifier: 0x" << std::hex << std::setw(4) << std::setfill('0') << dns_identifier << std::dec << std::endl;
+        std::cout << "Flags: QR=" << (int)qr << ", OPCODE=" << (int)opcode << ", AA=" << (int)aa << ", TC=" << (int)tc
+                << ", RD=" << (int)rd << ", RA=" << (int)ra << ", AD=" << (int)ad << ", CD=" << (int)cd << ", RCODE=" << (int)rcode
+                << std::endl << std::endl;
+    }
+    return std::make_pair(dns_header, qr);
 }
 
-void PacketProcessing::print_dns_information(const u_char *frame, const u_char *pointer)
+void PacketProcessing::print_dns_information(const u_char *frame, const u_char *pointer, parser *parse, uint8_t qr )
 {
     (void)frame;
     Utils utility_functions;
     uint16_t an_count = ntohs(*(uint16_t *)(pointer + 6));  // specifying the number of resource records in the answer section.
-    // uint16_t qd_count = ntohs(*(uint16_t *)(pointer + 4));  // specifying the number of entries in the question section.
-    // uint16_t ns_count = ntohs(*(uint16_t *)(pointer + 8));  // specifying the number of name server resource records in the authority records section.
-    // uint16_t ar_count = ntohs(*(uint16_t *)(pointer + 10)); // specifying the number of resource records in the additional records section
-    
-    print_sections(pointer + 10, utility_functions, an_count, frame);
-    
-    
-    std::cout << "=================================================" << std::endl;
+    uint16_t qd_count = ntohs(*(uint16_t *)(pointer + 4));  // specifying the number of entries in the question section.
+    uint16_t ns_count = ntohs(*(uint16_t *)(pointer + 8));  // specifying the number of name server resource records in the authority records section.
+    uint16_t ar_count = ntohs(*(uint16_t *)(pointer + 10)); // specifying the number of resource records in the additional records section
+    if(!parse->verbose)
+    {
+        char qr_char = (qr == 0) ? 'Q' : 'R';
+        std::cout << "(" <<  qr_char  << " " << an_count << "/" << qd_count << "/" << ns_count << "/" << ar_count << ")" << std::endl;
+    }
+    else
+    {
+        print_sections(pointer + 10, utility_functions, an_count, frame);
+        std::cout << "=================================================" << std::endl;
+    }
 }
 
-void PacketProcessing::print_sections(const u_char *pointer, Utils utility_functions, uint16_t an_count, const u_char *frame)
+void PacketProcessing::print_sections(const u_char *question_pointer, Utils utility_functions, uint16_t an_count, const u_char *frame)
 {
+    (void)frame;
     std::cout << "[Question Section]" << std::endl;
-    std::string name = utility_functions.parse_domain_name(pointer + 2, frame);
-    const u_char *qtype_ptr = pointer + name.size();
-
-    uint16_t typeos = ntohs(*(uint16_t *)(qtype_ptr + 4));
-    uint16_t classos = ntohs(*(uint16_t *)(qtype_ptr + 6));
+    int lenght = 0;
+    auto result = utility_functions.parse_domain_name(question_pointer + 2, frame);
+    const u_char *qtype_ptr = question_pointer + result.first.size();
+    uint16_t q_type = ntohs(*(uint16_t *)(qtype_ptr + 4));
+    uint16_t q_class = ntohs(*(uint16_t *)(qtype_ptr + 6));
 
     // Convert QTYPE to a readable string
-    std::string type_str = utility_functions.get_record_type(typeos);
-    std::string class_str = utility_functions.get_class_type(classos);
+    std::string type_str = utility_functions.get_record_type(q_type);
+    std::string class_str = utility_functions.get_class_type(q_class);
 
-    std::cout << name << ". " << class_str << " " << type_str << std::endl << std::endl;
-    
+    std::cout << result.first << ". " << class_str << " " << type_str << std::endl << std::endl;
+
+    const u_char * answer_pointer = qtype_ptr + 8;
+    std::cout << "Pointer at answer section: 0x" << std::hex << std::setw(2) << std::setfill('0') << (int)*answer_pointer << std::endl;
+
     if(an_count != 0)
     {
         std::cout << "[Answer Section]" << std::endl;
-    }
 
+    }
     while(an_count > 0)
     {
-        uint16_t a_name = ntohs(*(uint16_t *)(qtype_ptr + 8));
-        uint8_t indicator = (a_name >> 8) & 0xFF; 
-        uint8_t offset = a_name & 0xFF; 
-        std::string domain_name;
-        if (indicator == 0xc0)
-        {
-            const u_char *compressed_name_ptr = pointer + offset - 10;
-            domain_name = utility_functions.parse_domain_name(compressed_name_ptr, frame);
-        }
-        else
-        {
-            std::cout << "Not Compressed" << std::endl;
+        auto result2 = utility_functions.parse_domain_name(answer_pointer, question_pointer -10);
+        lenght = result2.second;
+        uint16_t a_type = ntohs(*(uint16_t *)(answer_pointer + lenght));
+        uint16_t a_class = ntohs(*(uint16_t *)(answer_pointer + lenght + 2));
+        uint16_t a_ttl = ntohs(*(uint16_t *)(answer_pointer + lenght + 6));
+        uint16_t a_lenght = ntohs(*(uint16_t *)(answer_pointer + lenght + 8));
 
-        }
+        std::cout << "INFORMAAAACIEEEEEEEEEE:           " << result2.first << " " << std::dec << a_ttl << std::hex << " " <<utility_functions.get_record_type(a_type) << " " << utility_functions.get_record_type(a_class) << " " << (int)a_lenght << std::endl;
 
-        uint16_t a_type = ntohs(*(uint16_t *)(qtype_ptr + 10));
-        uint16_t a_class = ntohs(*(uint16_t *)(qtype_ptr + 12));
-        uint32_t a_ttl = ntohs(*(uint32_t *)(qtype_ptr + 16));
-        uint16_t a_lenght = ntohs(*(uint16_t *)(qtype_ptr + 18));
-        std::string rdata = utility_functions.get_rdata_string(qtype_ptr + 20,a_lenght,a_type);
+        answer_pointer = answer_pointer + a_lenght + 12;
 
-        std::cout << domain_name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type) << " " << rdata << std::endl;
+        std::cout << "Pointer at answer second one nigger section: 0x" << std::hex << std::setw(2) << std::setfill('0') << (int)*answer_pointer << std::endl;
 
         an_count = an_count - 1;
-        qtype_ptr = qtype_ptr + 12 + a_lenght;
     }
+    exit(0);
 }
