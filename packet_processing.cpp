@@ -149,12 +149,12 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
     }
     else
     {
-        print_sections(pointer + 10, utility_functions, an_count, frame, ns_count);
+        print_sections(pointer + 10, utility_functions, an_count, frame, ns_count, ar_count);
         std::cout << "=====================================" << std::endl;
     }
 }
 
-void PacketProcessing::print_sections(const u_char *question_pointer, Utils utility_functions, uint16_t an_count, const u_char *frame, uint16_t ns_count)
+void PacketProcessing::print_sections(const u_char *question_pointer, Utils utility_functions, uint16_t an_count, const u_char *frame, uint16_t ns_count, uint16_t ar_count)
 {
     (void)frame;
     std::cout << "[Question Section]" << std::endl;
@@ -168,15 +168,15 @@ void PacketProcessing::print_sections(const u_char *question_pointer, Utils util
     std::string type_str = utility_functions.get_record_type(q_type);
     std::string class_str = utility_functions.get_class_type(q_class);
 
-    std::cout << result.first << ". " << class_str << " " << type_str << std::endl << std::endl;
+    std::cout << result.first << ". " << class_str << " " << type_str << std::endl;
 
     const u_char * answer_pointer = qtype_ptr + 8;
     const u_char * authority_pointer = nullptr;
 
     if(an_count != 0)
     {
+        std::cout << std::endl;
         std::cout << "[Answer Section]" << std::endl;
-
     }
     while(an_count > 0)
     {
@@ -200,22 +200,18 @@ void PacketProcessing::print_sections(const u_char *question_pointer, Utils util
     if(ns_count != 0)
     {
         std::cout << std::endl;
+        authority_pointer = answer_pointer;
+        print_authority_section(authority_pointer,utility_functions,question_pointer,ns_count, ar_count);
     }
-    
-    authority_pointer = answer_pointer;
-
-    print_authority_section(authority_pointer,utility_functions,question_pointer,ns_count);
 }
 
-void PacketProcessing::print_authority_section(const u_char *authority_pointer, Utils utility_functions, const u_char *question_pointer, uint16_t ns_count)
+void PacketProcessing::print_authority_section(const u_char *authority_pointer, Utils utility_functions, const u_char *question_pointer, uint16_t ns_count, uint16_t ar_count)
 {
     const u_char * local_pointer = authority_pointer;
     const u_char *beggining = question_pointer;
 
-    if (ns_count != 0)
-    {
-        std::cout << "[Authority Section]" << std::endl;
-    }
+    std::cout << "[Authority Section]" << std::endl;
+    
     while (ns_count > 0)
     {
         auto result = utility_functions.parse_auth_info(local_pointer, beggining -10);
@@ -272,6 +268,19 @@ void PacketProcessing::print_authority_section(const u_char *authority_pointer, 
         }
 
         ns_count = ns_count - 1;
-
     }
+
+    if(ar_count != 0)
+    {
+        std::cout << std::endl;
+        print_additional_section(local_pointer,utility_functions,question_pointer,ar_count);
+    }
+}
+
+void PacketProcessing::print_additional_section(const u_char *authority_pointer, Utils utility_functions, const u_char *question_pointer, uint16_t ar_count)
+{
+    (void)authority_pointer;
+    (void)utility_functions;
+    (void)question_pointer;
+    (void)ar_count;
 }
