@@ -1,43 +1,34 @@
 #include "utils.hpp"
 
-std::pair<std::string, int> Utils::parse_domain_name(const u_char *beginning_of_section, const u_char *packet_start)
-{
-    std::string domain_name;
-    const u_char *current_ptr = beginning_of_section;
-    int lenght = 0;
-    // Print the entire section in hexadecimal
+// Print the entire section in hexadecimal
     // std::cout << "Hex dump of the section: ";
     // for (const u_char *ptr = beginning_of_section; *ptr != 0; ++ptr)
     // {
     //     std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)*ptr << " ";
     // }
 
+std::pair<std::string, int> Utils::parse_domain_name(const u_char *beginning_of_section, const u_char *packet_start)
+{
+    std::string domain_name;
+    const u_char *current_ptr = beginning_of_section;
+    int lenght = 0;
+
+    bool first_reference = true;
+
     while (*current_ptr != 0)
     {
         if (*current_ptr == 0xc0)
         {
             const u_char *offset = current_ptr + 1;
-            std::cout << "Reference pointer: 0x" << std::hex << std::setw(2) << std::setfill('0') << (int)*offset << std::endl;
 
             // Add offset with the beginning of the raw packet
             current_ptr = packet_start + *offset;
-            std::cout << "Pointer after reference: 0x" << std::hex << std::setw(2) << std::setfill('0') << (int)*current_ptr << std::endl;
-
-            while (*current_ptr != 0)
-            {
-                int label_length = *current_ptr;
-                current_ptr++;
-                domain_name.append((const char *)current_ptr, label_length);
-                current_ptr += label_length;
-
-                if (*current_ptr != 0)
-                {
-                    domain_name.append(".");
-                }
-            }
             
-            lenght = lenght + 2;
-            break;
+            if(first_reference)
+            {
+                lenght = lenght + 2;
+                first_reference = false;
+            }
         }
         else
         {
@@ -45,7 +36,10 @@ std::pair<std::string, int> Utils::parse_domain_name(const u_char *beginning_of_
             current_ptr++;
             domain_name.append((const char *)current_ptr, label_length);
             current_ptr += label_length;
-            lenght = lenght + label_length;
+            if(first_reference)
+            {
+                lenght = lenght + label_length;
+            }
             if (*current_ptr != 0)
             {
                 domain_name.append(".");
@@ -100,7 +94,7 @@ std::string Utils::get_class_type(uint16_t q_class)
 std::string Utils::get_rdata_string(const u_char *rdata_ptr, uint16_t a_length, uint16_t a_type, const u_char *frame)
 {
     std::stringstream rdata_stream;
-    (void)frame;
+    (void)a_length;
 
     if (a_type == 1)  // Type A (IPv4)
     {
@@ -116,17 +110,15 @@ std::string Utils::get_rdata_string(const u_char *rdata_ptr, uint16_t a_length, 
         inet_ntop(AF_INET6, rdata_ptr, ipv6, INET6_ADDRSTRLEN);
         rdata_stream << ipv6;
     }
+    else if (a_type == 5 || a_type == 2 || a_type == 15)  // Type CNAME (5), NS (2), MX (15)
+    {
+        // Parse the domain name from RDATA for CNAME, NS, and MX
+        auto domain_name_and_length = parse_domain_name(rdata_ptr, frame);  // Assuming parse_domain_name returns a pair<string, int>
+        rdata_stream << domain_name_and_length.first;
+    }
     else
     {
-        // For unsupported or unknown types, just return the raw RDATA in hexadecimal
-        for (int i = 0; i < a_length; ++i)
-        {
-            rdata_stream << std::hex << std::setw(2) << std::setfill('0') << (int)rdata_ptr[i];
-            if (i < a_length - 1)
-            {
-                rdata_stream << " ";
-            }
-        }
+        rdata_stream << "Not supported record type";
     }
 
     return rdata_stream.str();  // Return the final RDATA string

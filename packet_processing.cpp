@@ -149,12 +149,12 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
     }
     else
     {
-        print_sections(pointer + 10, utility_functions, an_count, frame);
-        std::cout << "=================================================" << std::endl;
+        print_sections(pointer + 10, utility_functions, an_count, frame, ns_count);
+        std::cout << "=====================================" << std::endl;
     }
 }
 
-void PacketProcessing::print_sections(const u_char *question_pointer, Utils utility_functions, uint16_t an_count, const u_char *frame)
+void PacketProcessing::print_sections(const u_char *question_pointer, Utils utility_functions, uint16_t an_count, const u_char *frame, uint16_t ns_count)
 {
     (void)frame;
     std::cout << "[Question Section]" << std::endl;
@@ -171,7 +171,7 @@ void PacketProcessing::print_sections(const u_char *question_pointer, Utils util
     std::cout << result.first << ". " << class_str << " " << type_str << std::endl << std::endl;
 
     const u_char * answer_pointer = qtype_ptr + 8;
-    std::cout << "Pointer at answer section: 0x" << std::hex << std::setw(2) << std::setfill('0') << (int)*answer_pointer << std::endl;
+    const u_char * authority_pointer = nullptr;
 
     if(an_count != 0)
     {
@@ -186,14 +186,35 @@ void PacketProcessing::print_sections(const u_char *question_pointer, Utils util
         uint16_t a_class = ntohs(*(uint16_t *)(answer_pointer + lenght + 2));
         uint16_t a_ttl = ntohs(*(uint16_t *)(answer_pointer + lenght + 6));
         uint16_t a_lenght = ntohs(*(uint16_t *)(answer_pointer + lenght + 8));
+        const u_char* data_pointer = answer_pointer + lenght + 10;
+        std::string a_data = utility_functions.get_rdata_string(data_pointer, a_lenght, a_type, question_pointer - 10);
 
-        std::cout << "INFORMAAAACIEEEEEEEEEE:           " << result2.first << " " << std::dec << a_ttl << std::hex << " " <<utility_functions.get_record_type(a_type) << " " << utility_functions.get_record_type(a_class) << " " << (int)a_lenght << std::endl;
+        std::cout << result2.first << " " << std::dec << a_ttl << std::hex << " " <<utility_functions.get_record_type(a_type) << " " << utility_functions.get_class_type(a_class) << " " << a_data << std::endl;
 
         answer_pointer = answer_pointer + a_lenght + 12;
 
-        std::cout << "Pointer at answer second one nigger section: 0x" << std::hex << std::setw(2) << std::setfill('0') << (int)*answer_pointer << std::endl;
+        // std::cout << "Pointer at answer second one nigger section: 0x" << std::hex << std::setw(2) << std::setfill('0') << (int)*answer_pointer << std::endl;
 
         an_count = an_count - 1;
     }
-    exit(0);
+    
+    authority_pointer = answer_pointer;
+
+    print_authority_section(authority_pointer,utility_functions,frame,ns_count);
+}
+
+void PacketProcessing::print_authority_section(const u_char *authority_pointer, Utils utility_functions, const u_char *frame, uint16_t ns_count)
+{
+    // Process the Authority Section
+    (void)frame;
+    (void)utility_functions;
+    (void)authority_pointer;
+    if (ns_count != 0)
+    {
+        std::cout << "[Authority Section]" << std::endl;
+    }
+    while (ns_count > 0)
+    {
+        exit(0);
+    }
 }
