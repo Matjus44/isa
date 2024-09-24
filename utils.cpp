@@ -144,7 +144,7 @@ std::string Utils::get_rdata_string(const u_char *rdata_ptr, uint16_t a_length, 
     else if (a_type == 5 || a_type == 2 || a_type == 15)  // Type CNAME (5), NS (2), MX (15)
     {
         // Parse the domain name from RDATA for CNAME, NS, and MX
-        auto domain_name_and_length = parse_domain_name(rdata_ptr, frame); 
+        auto domain_name_and_length = parse_auth_info(rdata_ptr, frame); 
         rdata_stream << domain_name_and_length.first;
     }
     else

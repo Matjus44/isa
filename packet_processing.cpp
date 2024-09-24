@@ -180,7 +180,7 @@ void PacketProcessing::print_sections(const u_char *question_pointer, Utils util
     }
     while(an_count > 0)
     {
-        auto result2 = utility_functions.parse_domain_name(answer_pointer, question_pointer -10);
+        auto result2 = utility_functions.parse_auth_info(answer_pointer, question_pointer -10);
         lenght = result2.second;
         uint16_t a_type = ntohs(*(uint16_t *)(answer_pointer + lenght));
         uint16_t a_class = ntohs(*(uint16_t *)(answer_pointer + lenght + 2));
@@ -209,8 +209,6 @@ void PacketProcessing::print_sections(const u_char *question_pointer, Utils util
 
 void PacketProcessing::print_authority_section(const u_char *authority_pointer, Utils utility_functions, const u_char *question_pointer, uint16_t ns_count)
 {
-    (void)utility_functions;
-
     const u_char * local_pointer = authority_pointer;
     const u_char *beggining = question_pointer;
 
@@ -227,7 +225,7 @@ void PacketProcessing::print_authority_section(const u_char *authority_pointer, 
         uint16_t au_type = ntohs(*(uint16_t *)(local_pointer + lenght));
         uint16_t au_class = ntohs(*(uint16_t *)(local_pointer + lenght + 2));
         uint16_t au_ttl = ntohs(*(uint16_t *)(local_pointer + lenght + 6));
-        uint16_t au_lenght = ntohs(*(uint16_t *)(local_pointer + lenght + 8));
+        // uint16_t au_lenght = ntohs(*(uint16_t *)(local_pointer + lenght + 8));
 
         if (au_type == 6)  // SOA Record
         {
