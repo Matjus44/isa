@@ -32,7 +32,7 @@ class PacketProcessing
         static std::pair<const u_char*, uint8_t> print_identifier_and_flags(const u_char *frame, u_int16_t type, parser *parse);
         static void print_dns_information(const u_char *frame, const u_char *pointer, parser *parse, uint8_t qr);
         static void  print_sections(const u_char *pointer, Utils utility_functions, uint16_t an_count, const u_char *frame, uint16_t ns_count);
-        static void print_authority_section(const u_char *authority_pointer, Utils utility_functions, const u_char *frame, uint16_t ns_count);
+        static void print_authority_section(const u_char *authority_pointer, Utils utility_functions, const u_char *question_pointer, uint16_t ns_count);
 };
 
 #endif

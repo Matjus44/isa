@@ -50,6 +50,37 @@ std::pair<std::string, int> Utils::parse_domain_name(const u_char *beginning_of_
     return std::make_pair(domain_name, lenght);
 }
 
+std::pair<std::string, int> Utils::parse_auth_info(const u_char *beginning_of_section, const u_char *packet_start)
+{
+    std::string domain_name;
+    const u_char *current_ptr = beginning_of_section;
+    int lenght = 0;
+    
+    lenght = get_domain_name_length(current_ptr);
+
+    while (*current_ptr != 0)
+    {
+        if (*current_ptr == 0xc0)
+        {
+            const u_char *offset = current_ptr + 1;
+
+            // Add offset with the beginning of the raw packet
+            current_ptr = packet_start + *offset;
+        }
+        else
+        {
+            int label_length = *current_ptr;
+            current_ptr++;
+            domain_name.append((const char *)current_ptr, label_length);
+            current_ptr += label_length;
+            if (*current_ptr != 0)
+            {
+                domain_name.append(".");
+            }
+        }
+    }
+    return std::make_pair(domain_name, lenght);
+}
 
 std::string Utils::get_record_type(uint16_t q_type)
 {
@@ -113,7 +144,7 @@ std::string Utils::get_rdata_string(const u_char *rdata_ptr, uint16_t a_length, 
     else if (a_type == 5 || a_type == 2 || a_type == 15)  // Type CNAME (5), NS (2), MX (15)
     {
         // Parse the domain name from RDATA for CNAME, NS, and MX
-        auto domain_name_and_length = parse_domain_name(rdata_ptr, frame);  // Assuming parse_domain_name returns a pair<string, int>
+        auto domain_name_and_length = parse_domain_name(rdata_ptr, frame); 
         rdata_stream << domain_name_and_length.first;
     }
     else
@@ -124,13 +155,30 @@ std::string Utils::get_rdata_string(const u_char *rdata_ptr, uint16_t a_length, 
     return rdata_stream.str();  // Return the final RDATA string
 }
 
-int Utils::get_lenght(const u_char *beginning)
+int Utils::get_domain_name_length(const u_char *beginning_of_section)
 {
-    int lenght = 0;
-    while(beginning != 0)
+    const u_char *current_ptr = beginning_of_section;
+    int length = 0; 
+
+    while (*current_ptr != 0)
     {
-        lenght = lenght + 1;
+        if ((*current_ptr & 0xC0) == 0xC0) 
+        {
+            length += 2; 
+            break; 
+        }
+        else
+        {
+            int label_length = *current_ptr; 
+            length += label_length + 1;
+            current_ptr += label_length + 1; 
+        }
     }
 
-    return lenght;
+    if ((*current_ptr & 0xC0) != 0xC0)
+    {
+        length += 1;
+    }
+
+    return length;
 }

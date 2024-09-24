@@ -197,24 +197,83 @@ void PacketProcessing::print_sections(const u_char *question_pointer, Utils util
 
         an_count = an_count - 1;
     }
+    if(ns_count != 0)
+    {
+        std::cout << std::endl;
+    }
     
     authority_pointer = answer_pointer;
 
-    print_authority_section(authority_pointer,utility_functions,frame,ns_count);
+    print_authority_section(authority_pointer,utility_functions,question_pointer,ns_count);
 }
 
-void PacketProcessing::print_authority_section(const u_char *authority_pointer, Utils utility_functions, const u_char *frame, uint16_t ns_count)
+void PacketProcessing::print_authority_section(const u_char *authority_pointer, Utils utility_functions, const u_char *question_pointer, uint16_t ns_count)
 {
-    // Process the Authority Section
-    (void)frame;
     (void)utility_functions;
-    (void)authority_pointer;
+
+    const u_char * local_pointer = authority_pointer;
+    const u_char *beggining = question_pointer;
+
     if (ns_count != 0)
     {
         std::cout << "[Authority Section]" << std::endl;
     }
     while (ns_count > 0)
     {
-        exit(0);
+        auto result = utility_functions.parse_auth_info(local_pointer, beggining -10);
+        int lenght = result.second;
+        std::string name = result.first;
+
+        uint16_t au_type = ntohs(*(uint16_t *)(local_pointer + lenght));
+        uint16_t au_class = ntohs(*(uint16_t *)(local_pointer + lenght + 2));
+        uint16_t au_ttl = ntohs(*(uint16_t *)(local_pointer + lenght + 6));
+        uint16_t au_lenght = ntohs(*(uint16_t *)(local_pointer + lenght + 8));
+
+        if (au_type == 6)  // SOA Record
+        {
+            const u_char *rdata_pointer = local_pointer + lenght + 10; // Move past type, class, TTL, and RDATA length
+
+            // Parse MNAME (Primary name server)
+            auto mname_result = utility_functions.parse_auth_info(rdata_pointer, beggining - 10);
+            int mname_length = mname_result.second;
+            std::string mname = mname_result.first;
+
+            rdata_pointer = rdata_pointer + mname_length;
+
+            auto mname_result2 = utility_functions.parse_auth_info(rdata_pointer, beggining - 10);
+            int mname_length_2 = mname_result2.second;
+            std::string mname2 = mname_result2.first;
+
+            rdata_pointer = rdata_pointer + mname_length_2;
+
+            // Parse the SOA-specific fields (Serial, Refresh, Retry, Expire, Minimum TTL)
+            uint32_t serial_number = ntohl(*(uint32_t *)(rdata_pointer));
+            uint32_t refresh_interval = ntohl(*(uint32_t *)(rdata_pointer + 4));
+            uint32_t retry_interval = ntohl(*(uint32_t *)(rdata_pointer + 8));
+            uint32_t expire_limit = ntohl(*(uint32_t *)(rdata_pointer + 12));
+            uint32_t minimum = ntohl(*(uint32_t *)(rdata_pointer + 16));
+
+            // Print the complete SOA record in a clear format
+            std::cout << name << " " << std::dec << au_ttl << std::hex << " " << utility_functions.get_class_type(au_class) << " " << utility_functions.get_record_type(au_type) << " " << mname << " " << mname2 << " (" << std::endl;
+            std::cout << "    Serial Number: " <<  std::dec << serial_number <<  std::hex << std::endl;
+            std::cout << "    Refresh Interval: " <<  std::dec << refresh_interval <<  std::hex << std::endl;
+            std::cout << "    Retry Interval: " <<  std::dec << retry_interval <<  std::hex << std::endl;
+            std::cout << "    Expire Limit: " <<  std::dec << expire_limit <<  std::hex << std::endl;
+            std::cout << "    Minimum TTL: " <<  std::dec << minimum <<  std::hex << std::endl;
+            std::cout << ")" << std::endl;
+            local_pointer = rdata_pointer + 17;
+
+        }
+        else if (au_type == 2)  // NS Record
+        {
+            const u_char *rdata_pointer = local_pointer + lenght + 10;
+            auto ns_result = utility_functions.parse_auth_info(rdata_pointer, beggining - 10);
+            std::string ns_name = ns_result.first;
+            std::cout << name << " " << std::dec << au_ttl << " " << utility_functions.get_class_type(au_class) << " " << utility_functions.get_record_type(au_type) << " " << ns_name << std::endl;
+            local_pointer = rdata_pointer + 1;
+        }
+
+        ns_count = ns_count - 1;
+
     }
 }
