@@ -136,7 +136,6 @@ std::pair<const u_char*, uint8_t> PacketProcessing::print_identifier_and_flags(c
 
 void PacketProcessing::print_dns_information(const u_char *frame, const u_char *pointer, parser *parse, uint8_t qr )
 {
-    (void)frame;
     Utils utility_functions;
     uint16_t qd_count = ntohs(*(uint16_t *)(pointer + 4));  // specifying the number of entries in the question section.
     uint16_t an_count = ntohs(*(uint16_t *)(pointer + 6));  // specifying the number of resource records in the answer section.
@@ -149,7 +148,11 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
     }
     else
     {
-        const u_char* next_section = print_sections(pointer + 10, utility_functions, frame);
+        const u_char* next_section = nullptr;
+        if(qd_count != 0)
+        {
+            next_section = print_question_sections(pointer + 10, utility_functions, frame);
+        }
         if(an_count != 0)
         {
             std::cout << std::endl;
@@ -170,7 +173,9 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
     }
 }
 
-const u_char * PacketProcessing::print_sections(const u_char *question_pointer, Utils utility_functions, const u_char *frame)
+// std::cout << "Pointer at answer second one nigger section: 0x" << std::hex << std::setw(2) << std::setfill('0') << (int)*local_pointer << std::endl;
+
+const u_char * PacketProcessing::print_question_sections(const u_char *question_pointer, Utils utility_functions, const u_char *frame)
 {
     std::cout << "[Question Section]" << std::endl; 
     auto result = utility_functions.parse_domain_name(question_pointer + 2, frame);
@@ -178,7 +183,6 @@ const u_char * PacketProcessing::print_sections(const u_char *question_pointer, 
     uint16_t q_type = ntohs(*(uint16_t *)(qtype_ptr + 4));
     uint16_t q_class = ntohs(*(uint16_t *)(qtype_ptr + 6));
 
-    // Convert QTYPE to a readable string
     std::string type_str = utility_functions.get_record_type(q_type);
     std::string class_str = utility_functions.get_class_type(q_class);
 
@@ -196,7 +200,7 @@ const u_char * PacketProcessing::print_answer_section(const u_char *answer_point
     int lenght = 0;
 
     std::cout << "[Answer Section]" << std::endl;
-    
+
     while(an_count > 0)
     {
         auto result2 = utility_functions.parse_auth_info(local_pointer, question_pointer -10);
@@ -211,9 +215,6 @@ const u_char * PacketProcessing::print_answer_section(const u_char *answer_point
         std::cout << result2.first << " " << std::dec << a_ttl << std::hex << " " <<utility_functions.get_record_type(a_type) << " " << utility_functions.get_class_type(a_class) << " " << a_data << std::endl;
 
         local_pointer = local_pointer + a_lenght + 12;
-
-        // std::cout << "Pointer at answer second one nigger section: 0x" << std::hex << std::setw(2) << std::setfill('0') << (int)*local_pointer << std::endl;
-
         an_count = an_count - 1;
     }
 
@@ -243,7 +244,6 @@ const u_char * PacketProcessing::print_authority_section(const u_char *authority
         {
             const u_char *rdata_pointer = local_pointer + lenght + 10; // Move past type, class, TTL, and RDATA length
 
-            // Parse MNAME (Primary name server)
             auto mname_result = utility_functions.parse_auth_info(rdata_pointer, beggining - 10);
             int mname_length = mname_result.second;
             std::string mname = mname_result.first;
@@ -256,14 +256,12 @@ const u_char * PacketProcessing::print_authority_section(const u_char *authority
 
             rdata_pointer = rdata_pointer + mname_length_2;
 
-            // Parse the SOA-specific fields (Serial, Refresh, Retry, Expire, Minimum TTL)
             uint32_t serial_number = ntohl(*(uint32_t *)(rdata_pointer));
             uint32_t refresh_interval = ntohl(*(uint32_t *)(rdata_pointer + 4));
             uint32_t retry_interval = ntohl(*(uint32_t *)(rdata_pointer + 8));
             uint32_t expire_limit = ntohl(*(uint32_t *)(rdata_pointer + 12));
             uint32_t minimum = ntohl(*(uint32_t *)(rdata_pointer + 16));
 
-            // Print the complete SOA record in a clear format
             std::cout << name << " " << std::dec << au_ttl << std::hex << " " << utility_functions.get_class_type(au_class) << " " << utility_functions.get_record_type(au_type) << " " << mname << " " << mname2 << " (" << std::endl;
             std::cout << "    Serial Number: " <<  std::dec << serial_number <<  std::hex << std::endl;
             std::cout << "    Refresh Interval: " <<  std::dec << refresh_interval <<  std::hex << std::endl;
