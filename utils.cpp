@@ -79,7 +79,7 @@ std::string Utils::get_class_type(uint16_t q_class)
     }
 }
 
-void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,uint16_t a_type,const u_char *rdata_ptr, const u_char *frame, Utils utility_functions)
+void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,uint16_t a_type,const u_char *rdata_ptr, const u_char *frame, Utils utility_functions, parser *parse)
 {
     std::stringstream rdata_stream;
     const u_char * local_pointer = rdata_ptr;
@@ -89,8 +89,10 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
         char ipv4[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, rdata_ptr, ipv4, INET_ADDRSTRLEN);
         rdata_stream << ipv4;
-
-        std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type)  << " " << rdata_stream.str() << std::endl;
+        if(parse->verbose)
+        {
+            std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type)  << " " << rdata_stream.str() << std::endl;
+        }
     }
     else if (a_type == 28)  // Type AAAA (IPv6)
     {
@@ -98,7 +100,10 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
         inet_ntop(AF_INET6, rdata_ptr, ipv6, INET6_ADDRSTRLEN);
         rdata_stream << ipv6;
 
-        std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type)  << " " << rdata_stream.str() << std::endl;
+        if(parse->verbose)
+        {
+            std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type)  << " " << rdata_stream.str() << std::endl;
+        }
     }
     else if(a_type == 15) // MX
     {
@@ -106,7 +111,10 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
         auto domain_name_and_length = parse_auth_info(local_pointer, frame); 
         rdata_stream << domain_name_and_length.first;
 
-        std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type) << " " <<  std::dec << preference << std::hex << " " << rdata_stream.str() << std::endl;
+        if(parse->verbose)
+        {
+            std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type) << " " <<  std::dec << preference << std::hex << " " << rdata_stream.str() << std::endl;
+        }
         
     }
     else if (a_type == 5 || a_type == 2)  // CNAME, NS 
@@ -114,7 +122,10 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
         auto domain_name_and_length = parse_auth_info(rdata_ptr, frame); 
         rdata_stream << domain_name_and_length.first;
 
-        std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class)  << " " << utility_functions.get_record_type(a_type) << " " << rdata_stream.str() << std::endl;
+        if(parse->verbose)
+        {
+            std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class)  << " " << utility_functions.get_record_type(a_type) << " " << rdata_stream.str() << std::endl;
+        }
     }
     else if(a_type == 6) // SOA
     {
@@ -136,18 +147,21 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
         uint32_t expire_limit = ntohl(*(uint32_t *)(local_pointer + 12));
         uint32_t minimum = ntohl(*(uint32_t *)(local_pointer + 16));
 
-        if(name == "")
+        if(parse->verbose)
         {
-            name = "<root>";
-        }
+            if(name == "")
+            {
+                name = "<root>";
+            }
 
-        std::cout << name << " " << std::dec << a_ttl << " IN " << utility_functions.get_record_type(a_type) << " " << mname << " " << mname2 << " (" << std::endl;
-        std::cout << "    " << serial_number << " ; Serial" << std::endl;
-        std::cout << "    " << refresh_interval << " ; Refresh" << std::endl;
-        std::cout << "    " << retry_interval << " ; Retry" << std::endl;
-        std::cout << "    " << expire_limit << " ; Expire" << std::endl;
-        std::cout << "    " << minimum << " ; Minimum TTL" << std::endl;
-        std::cout << ")" << std::endl;
+            std::cout << name << " " << std::dec << a_ttl << " IN " << utility_functions.get_record_type(a_type) << " " << mname << " " << mname2 << " (" << std::endl;
+            std::cout << "    " << serial_number << " ; Serial" << std::endl;
+            std::cout << "    " << refresh_interval << " ; Refresh" << std::endl;
+            std::cout << "    " << retry_interval << " ; Retry" << std::endl;
+            std::cout << "    " << expire_limit << " ; Expire" << std::endl;
+            std::cout << "    " << minimum << " ; Minimum TTL" << std::endl;
+            std::cout << ")" << std::endl;
+        }
     }
     else if (a_type == 33)  // SRV
     {
@@ -158,13 +172,16 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
         auto target_result = utility_functions.parse_auth_info(local_pointer + 6, frame);
         std::string target = target_result.first;
 
-        std::cout << name << " " << std::dec << a_ttl << std::hex << " " 
-                << utility_functions.get_record_type(a_type) << " " 
-                << utility_functions.get_class_type(a_class) << " " 
-                << std::dec << priority << " " 
-                << weight << " " 
-                << port << " " 
-                << target << std::endl;
+        if(parse->verbose)
+        {
+            std::cout << name << " " << std::dec << a_ttl << std::hex << " " 
+                    << utility_functions.get_record_type(a_type) << " " 
+                    << utility_functions.get_class_type(a_class) << " " 
+                    << std::dec << priority << " " 
+                    << weight << " " 
+                    << port << " " 
+                    << target << std::endl;
+        }
     }
     else
     {

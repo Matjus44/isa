@@ -146,36 +146,36 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
         char qr_char = (qr == 0) ? 'Q' : 'R';
         std::cout << "(" <<  qr_char  << " " << an_count << "/" << qd_count << "/" << ns_count << "/" << ar_count << ")" << std::endl;
     }
-    else
+    
+    const u_char* next_section = nullptr;
+    if(qd_count != 0)
     {
-        const u_char* next_section = nullptr;
-        if(qd_count != 0)
-        {
-            next_section = print_question_sections(pointer + 10, utility_functions, frame, qd_count);
-        }
-        if(an_count != 0)
-        {
-            next_section = print_other_sections(next_section,utility_functions,pointer+ 10,an_count,"[Answer Section]");
-        }
-        if(ns_count != 0)
-        {
-            next_section = print_other_sections(next_section,utility_functions,pointer + 10,ns_count, "[Authority Section]");
-        }
-        if(ar_count != 0)
-        {
-            print_other_sections(next_section,utility_functions,pointer + 10,ar_count, "[Additional Section]");
-        }
+        next_section = print_question_sections(pointer + 10, utility_functions, frame, qd_count, parse);
+    }
+    if(an_count != 0)
+    {
+        next_section = print_other_sections(next_section,utility_functions,pointer+ 10,an_count,"[Answer Section]", parse);
+    }
+    if(ns_count != 0)
+    {
+        next_section = print_other_sections(next_section,utility_functions,pointer + 10,ns_count, "[Authority Section]", parse);
+    }
+    if(ar_count != 0)
+    {
+        print_other_sections(next_section,utility_functions,pointer + 10,ar_count, "[Additional Section]", parse);
+    }
 
+    if(parse->verbose)
+    {
         std::cout << "=====================================" << std::endl;
     }
+    
 }
 
 // std::cout << "Pointer at answer second one nigger section: 0x" << std::hex << std::setw(2) << std::setfill('0') << (int)*local_pointer << std::endl;
 
-const u_char * PacketProcessing::print_question_sections(const u_char *question_pointer, Utils utility_functions, const u_char *frame, uint16_t qd_count)
+const u_char * PacketProcessing::print_question_sections(const u_char *question_pointer, Utils utility_functions, const u_char *frame, uint16_t qd_count, parser *parse)
 {
-    std::cout << "[Question Section]" << std::endl;
-
     const u_char *next_question = question_pointer;
 
     while(qd_count > 0 )
@@ -188,7 +188,11 @@ const u_char * PacketProcessing::print_question_sections(const u_char *question_
         std::string type_str = utility_functions.get_record_type(q_type);
         std::string class_str = utility_functions.get_class_type(q_class);
 
-        std::cout << result.first << " " << class_str << " " << type_str << std::endl;
+        if(parse->verbose)
+        {
+            std::cout << "[Question Section]" << std::endl;
+            std::cout << result.first << " " << class_str << " " << type_str << std::endl;
+        }
 
         next_question = qtype_ptr + 6;
 
@@ -199,7 +203,7 @@ const u_char * PacketProcessing::print_question_sections(const u_char *question_
     return answer_pointer;
 }
 
-const u_char * PacketProcessing::print_other_sections(const u_char *answer_pointer, Utils utility_functions, const u_char *question_pointer, uint16_t count, std::string section_type)
+const u_char * PacketProcessing::print_other_sections(const u_char *answer_pointer, Utils utility_functions, const u_char *question_pointer, uint16_t count, std::string section_type, parser *parse)
 {   
     const u_char *local_pointer = answer_pointer;
     const u_char * authority_pointer = nullptr;
@@ -217,14 +221,14 @@ const u_char * PacketProcessing::print_other_sections(const u_char *answer_point
         
         if(utility_functions.get_record_type(a_type)  != "Unknown")
         {
-            if(first_loop == false)
+            if(first_loop == false && parse->verbose == true)
             {
                 std::cout << std::endl;
                 std::cout << section_type << std::endl;
                 first_loop = true;
             }
             const u_char* data_pointer = local_pointer + lenght + 10;
-            utility_functions.get_rdata_string(result2.first,a_ttl,a_class,a_type,data_pointer,  question_pointer - 10,utility_functions );
+            utility_functions.get_rdata_string(result2.first,a_ttl,a_class,a_type,data_pointer,  question_pointer - 10,utility_functions, parse );
         }
 
         local_pointer = local_pointer + a_lenght + 12;
