@@ -206,13 +206,14 @@ const u_char * PacketProcessing::print_answer_section(const u_char *answer_point
         auto result2 = utility_functions.parse_auth_info(local_pointer, question_pointer -10);
         lenght = result2.second;
         uint16_t a_type = ntohs(*(uint16_t *)(local_pointer + lenght));
-        uint16_t a_class = ntohs(*(uint16_t *)(local_pointer + lenght + 2));
-        uint16_t a_ttl = ntohs(*(uint16_t *)(local_pointer + lenght + 6));
-        uint16_t a_lenght = ntohs(*(uint16_t *)(local_pointer + lenght + 8));
-        const u_char* data_pointer = local_pointer + lenght + 10;
-        std::string a_data = utility_functions.get_rdata_string(data_pointer, a_lenght, a_type, question_pointer - 10);
 
-        std::cout << result2.first << " " << std::dec << a_ttl << std::hex << " " <<utility_functions.get_record_type(a_type) << " " << utility_functions.get_class_type(a_class) << " " << a_data << std::endl;
+        uint16_t a_class = ntohs(*(uint16_t *)(local_pointer + lenght + 2));
+        uint32_t a_ttl = ntohl(*(uint32_t *)(local_pointer + lenght + 4));
+        uint16_t a_lenght = ntohs(*(uint16_t *)(local_pointer + lenght + 8));
+        
+        const u_char* data_pointer = local_pointer + lenght + 10;
+
+        std::string a_data = utility_functions.get_rdata_string(result2.first,a_lenght,a_ttl,a_class,a_type,data_pointer,  question_pointer - 10,utility_functions );
 
         local_pointer = local_pointer + a_lenght + 12;
         an_count = an_count - 1;
@@ -287,10 +288,28 @@ const u_char * PacketProcessing::print_authority_section(const u_char *authority
     return local_pointer;
 }
 
-void PacketProcessing::print_additional_section(const u_char *authority_pointer, Utils utility_functions, const u_char *question_pointer, uint16_t ar_count)
+void PacketProcessing::print_additional_section(const u_char *additional_pointer, Utils utility_functions, const u_char *question_pointer, uint16_t ar_count)
 {
-    (void)authority_pointer;
     (void)utility_functions;
-    (void)question_pointer;
     (void)ar_count;
+
+    const u_char * local_pointer = additional_pointer;
+    const u_char *beggining = question_pointer;
+
+    std::cout << "[Additional Section]" << std::endl;
+
+    while(ar_count > 0)
+    {
+        int lenght = 0;
+        auto result = utility_functions.parse_auth_info(local_pointer, beggining -10);
+        lenght = result.second;
+        uint16_t a_type = ntohs(*(uint16_t *)(local_pointer + lenght));
+        uint16_t a_class = ntohs(*(uint16_t *)(local_pointer + lenght + 2));
+        uint16_t a_ttl = ntohs(*(uint16_t *)(local_pointer + lenght + 6));
+        uint16_t a_lenght = ntohs(*(uint16_t *)(local_pointer + lenght + 8));
+        const u_char* data_pointer = local_pointer + lenght + 10;
+        std::string a_data = utility_functions.get_rdata_string(result.first,a_lenght,a_ttl,a_class,a_type,data_pointer,  question_pointer - 10,utility_functions );
+        local_pointer = local_pointer + a_lenght + 12;
+        ar_count = ar_count - 1;
+    }
 }
