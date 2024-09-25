@@ -122,7 +122,7 @@ std::string Utils::get_class_type(uint16_t q_class)
     }
 }
 
-std::string Utils::get_rdata_string(std::string name,uint16_t a_lenght,uint32_t a_ttl,uint16_t a_class,uint16_t a_type,const u_char *rdata_ptr, const u_char *frame, Utils utility_functions)
+void Utils::get_rdata_string(std::string name,uint16_t a_lenght,uint32_t a_ttl,uint16_t a_class,uint16_t a_type,const u_char *rdata_ptr, const u_char *frame, Utils utility_functions)
 {
     std::stringstream rdata_stream;
     const u_char * local_pointer = rdata_ptr;
@@ -130,7 +130,6 @@ std::string Utils::get_rdata_string(std::string name,uint16_t a_lenght,uint32_t 
 
     if (a_type == 1)  // Type A (IPv4)
     {
-        // Convert RDATA from binary to a human-readable IPv4 address
         char ipv4[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, rdata_ptr, ipv4, INET_ADDRSTRLEN);
         rdata_stream << ipv4;
@@ -139,14 +138,13 @@ std::string Utils::get_rdata_string(std::string name,uint16_t a_lenght,uint32_t 
     }
     else if (a_type == 28)  // Type AAAA (IPv6)
     {
-        // Convert RDATA from binary to a human-readable IPv6 address
         char ipv6[INET6_ADDRSTRLEN];
         inet_ntop(AF_INET6, rdata_ptr, ipv6, INET6_ADDRSTRLEN);
         rdata_stream << ipv6;
 
         std::cout << name << " " << std::dec << a_ttl << std::hex << " " <<utility_functions.get_record_type(a_type) << " " << utility_functions.get_class_type(a_class) << " " << rdata_stream.str() << std::endl;
     }
-    else if(a_type == 15)
+    else if(a_type == 15) // MX
     {
         uint16_t preference = ntohs(*(uint16_t *)(local_pointer));
         auto domain_name_and_length = parse_auth_info(local_pointer, frame); 
@@ -155,19 +153,67 @@ std::string Utils::get_rdata_string(std::string name,uint16_t a_lenght,uint32_t 
         std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_record_type(a_type) << " " << utility_functions.get_class_type(a_class) << " " <<  std::dec << preference << std::hex << " " << rdata_stream.str() << std::endl;
         
     }
-    else if (a_type == 5 || a_type == 2 || a_type == 15)  // Type CNAME (5), NS (2), MX (15)
+    else if (a_type == 5 || a_type == 2)  // CNAME, NS 
     {
         auto domain_name_and_length = parse_auth_info(rdata_ptr, frame); 
         rdata_stream << domain_name_and_length.first;
 
         std::cout << name << " " << std::dec << a_ttl << std::hex << " " <<utility_functions.get_record_type(a_type) << " " << utility_functions.get_class_type(a_class) << " " << rdata_stream.str() << std::endl;
     }
+    else if(a_type == 6) // SOA
+    {
+        auto mname_result = utility_functions.parse_auth_info(local_pointer, frame);
+        int mname_length = mname_result.second;
+        std::string mname = mname_result.first;
+
+        local_pointer = local_pointer + mname_length;
+
+        auto mname_result2 = utility_functions.parse_auth_info(local_pointer, frame);
+        int mname_length_2 = mname_result2.second;
+        std::string mname2 = mname_result2.first;
+
+        local_pointer = local_pointer + mname_length_2;
+
+        uint32_t serial_number = ntohl(*(uint32_t *)(local_pointer));
+        uint32_t refresh_interval = ntohl(*(uint32_t *)(local_pointer + 4));
+        uint32_t retry_interval = ntohl(*(uint32_t *)(local_pointer + 8));
+        uint32_t expire_limit = ntohl(*(uint32_t *)(local_pointer + 12));
+        uint32_t minimum = ntohl(*(uint32_t *)(local_pointer + 16));
+
+        if(name == "")
+        {
+            name = "<root>";
+        }
+
+        std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type) << " " << mname << " " << mname2 << " (" << std::endl;
+        std::cout << "    Serial Number: " <<  std::dec << serial_number <<  std::hex << std::endl;
+        std::cout << "    Refresh Interval: " <<  std::dec << refresh_interval <<  std::hex << std::endl;
+        std::cout << "    Retry Interval: " <<  std::dec << retry_interval <<  std::hex << std::endl;
+        std::cout << "    Expire Limit: " <<  std::dec << expire_limit <<  std::hex << std::endl;
+        std::cout << "    Minimum TTL: " <<  std::dec << minimum <<  std::hex << std::endl;
+        std::cout << ")" << std::endl;
+    }
+    else if (a_type == 33)  // SRV
+    {
+        uint16_t priority = ntohs(*(uint16_t *)(local_pointer));
+        uint16_t weight = ntohs(*(uint16_t *)(local_pointer + 2));
+        uint16_t port = ntohs(*(uint16_t *)(local_pointer + 4));
+
+        auto target_result = utility_functions.parse_auth_info(local_pointer + 6, frame);
+        std::string target = target_result.first;
+
+        std::cout << name << " " << std::dec << a_ttl << std::hex << " " 
+                << utility_functions.get_record_type(a_type) << " " 
+                << utility_functions.get_class_type(a_class) << " " 
+                << std::dec << priority << " " 
+                << weight << " " 
+                << port << " " 
+                << target << std::endl;
+    }
     else
     {
         rdata_stream << "Not supported record type";
     }
-
-    return rdata_stream.str();  // Return the final RDATA string
 }
 
 int Utils::get_domain_name_length(const u_char *beginning_of_section)

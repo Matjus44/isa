@@ -151,21 +151,18 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
         const u_char* next_section = nullptr;
         if(qd_count != 0)
         {
-            next_section = print_question_sections(pointer + 10, utility_functions, frame);
+            next_section = print_question_sections(pointer + 10, utility_functions, frame, qd_count);
         }
         if(an_count != 0)
         {
-            std::cout << std::endl;
             next_section = print_answer_section(next_section,utility_functions,pointer+ 10,an_count);
         }
         if(ns_count != 0)
         {
-            std::cout << std::endl;
             next_section = print_authority_section(next_section,utility_functions,pointer + 10,ns_count);
         }
         if(ar_count != 0)
         {
-            std::cout << std::endl;
             print_additional_section(next_section,utility_functions,pointer + 10,ar_count);
         }
 
@@ -175,45 +172,60 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
 
 // std::cout << "Pointer at answer second one nigger section: 0x" << std::hex << std::setw(2) << std::setfill('0') << (int)*local_pointer << std::endl;
 
-const u_char * PacketProcessing::print_question_sections(const u_char *question_pointer, Utils utility_functions, const u_char *frame)
+const u_char * PacketProcessing::print_question_sections(const u_char *question_pointer, Utils utility_functions, const u_char *frame, uint16_t qd_count)
 {
-    std::cout << "[Question Section]" << std::endl; 
-    auto result = utility_functions.parse_domain_name(question_pointer + 2, frame);
-    const u_char *qtype_ptr = question_pointer + result.first.size();
-    uint16_t q_type = ntohs(*(uint16_t *)(qtype_ptr + 4));
-    uint16_t q_class = ntohs(*(uint16_t *)(qtype_ptr + 6));
+    std::cout << "[Question Section]" << std::endl;
 
-    std::string type_str = utility_functions.get_record_type(q_type);
-    std::string class_str = utility_functions.get_class_type(q_class);
+    const u_char *next_question = question_pointer;
 
-    std::cout << result.first << ". " << class_str << " " << type_str << std::endl;
+    while(qd_count > 0 )
+    {
+        auto result = utility_functions.parse_auth_info(next_question + 2, frame);
+        const u_char *qtype_ptr = next_question + result.second;
+        uint16_t q_type = ntohs(*(uint16_t *)(qtype_ptr + 2));
+        uint16_t q_class = ntohs(*(uint16_t *)(qtype_ptr + 4));
 
-    const u_char * answer_pointer = qtype_ptr + 8;
+        std::string type_str = utility_functions.get_record_type(q_type);
+        std::string class_str = utility_functions.get_class_type(q_class);
 
+        std::cout << result.first << " " << class_str << " " << type_str << std::endl;
+
+        next_question = qtype_ptr + 6;
+
+        qd_count = qd_count - 1;
+    }
+
+    const u_char *answer_pointer = next_question;
     return answer_pointer;
 }
 
 const u_char * PacketProcessing::print_answer_section(const u_char *answer_pointer, Utils utility_functions, const u_char *question_pointer, uint16_t an_count)
-{
+{   
     const u_char *local_pointer = answer_pointer;
     const u_char * authority_pointer = nullptr;
     int lenght = 0;
-
-    std::cout << "[Answer Section]" << std::endl;
+    bool first_loop = false;
 
     while(an_count > 0)
     {
         auto result2 = utility_functions.parse_auth_info(local_pointer, question_pointer -10);
         lenght = result2.second;
         uint16_t a_type = ntohs(*(uint16_t *)(local_pointer + lenght));
-
         uint16_t a_class = ntohs(*(uint16_t *)(local_pointer + lenght + 2));
         uint32_t a_ttl = ntohl(*(uint32_t *)(local_pointer + lenght + 4));
         uint16_t a_lenght = ntohs(*(uint16_t *)(local_pointer + lenght + 8));
         
-        const u_char* data_pointer = local_pointer + lenght + 10;
-
-        std::string a_data = utility_functions.get_rdata_string(result2.first,a_lenght,a_ttl,a_class,a_type,data_pointer,  question_pointer - 10,utility_functions );
+        if(utility_functions.get_record_type(a_type)  != "Unknown")
+        {
+            if(first_loop == false)
+            {
+                std::cout << std::endl;
+                std::cout << "[Answer Section]" << std::endl;
+                first_loop = true;
+            }
+            const u_char* data_pointer = local_pointer + lenght + 10;
+            utility_functions.get_rdata_string(result2.first,a_lenght,a_ttl,a_class,a_type,data_pointer,  question_pointer - 10,utility_functions );
+        }
 
         local_pointer = local_pointer + a_lenght + 12;
         an_count = an_count - 1;
@@ -227,11 +239,11 @@ const u_char * PacketProcessing::print_authority_section(const u_char *authority
 {
     const u_char * local_pointer = authority_pointer;
     const u_char *beggining = question_pointer;
-
-    std::cout << "[Authority Section]" << std::endl;
+    bool first_loop = false;
     
     while (ns_count > 0)
     {
+
         auto result = utility_functions.parse_auth_info(local_pointer, beggining -10);
         int lenght = result.second;
         std::string name = result.first;
@@ -239,49 +251,20 @@ const u_char * PacketProcessing::print_authority_section(const u_char *authority
         uint16_t au_type = ntohs(*(uint16_t *)(local_pointer + lenght));
         uint16_t au_class = ntohs(*(uint16_t *)(local_pointer + lenght + 2));
         uint16_t au_ttl = ntohs(*(uint16_t *)(local_pointer + lenght + 6));
-        // uint16_t au_lenght = ntohs(*(uint16_t *)(local_pointer + lenght + 8));
+        uint16_t au_lenght = ntohs(*(uint16_t *)(local_pointer + lenght + 8));
+        const u_char *rdata_pointer = local_pointer + lenght + 10;
 
-        if (au_type == 6)  // SOA Record
+        if(utility_functions.get_record_type(au_type)  != "Unknown")
         {
-            const u_char *rdata_pointer = local_pointer + lenght + 10; // Move past type, class, TTL, and RDATA length
-
-            auto mname_result = utility_functions.parse_auth_info(rdata_pointer, beggining - 10);
-            int mname_length = mname_result.second;
-            std::string mname = mname_result.first;
-
-            rdata_pointer = rdata_pointer + mname_length;
-
-            auto mname_result2 = utility_functions.parse_auth_info(rdata_pointer, beggining - 10);
-            int mname_length_2 = mname_result2.second;
-            std::string mname2 = mname_result2.first;
-
-            rdata_pointer = rdata_pointer + mname_length_2;
-
-            uint32_t serial_number = ntohl(*(uint32_t *)(rdata_pointer));
-            uint32_t refresh_interval = ntohl(*(uint32_t *)(rdata_pointer + 4));
-            uint32_t retry_interval = ntohl(*(uint32_t *)(rdata_pointer + 8));
-            uint32_t expire_limit = ntohl(*(uint32_t *)(rdata_pointer + 12));
-            uint32_t minimum = ntohl(*(uint32_t *)(rdata_pointer + 16));
-
-            std::cout << name << " " << std::dec << au_ttl << std::hex << " " << utility_functions.get_class_type(au_class) << " " << utility_functions.get_record_type(au_type) << " " << mname << " " << mname2 << " (" << std::endl;
-            std::cout << "    Serial Number: " <<  std::dec << serial_number <<  std::hex << std::endl;
-            std::cout << "    Refresh Interval: " <<  std::dec << refresh_interval <<  std::hex << std::endl;
-            std::cout << "    Retry Interval: " <<  std::dec << retry_interval <<  std::hex << std::endl;
-            std::cout << "    Expire Limit: " <<  std::dec << expire_limit <<  std::hex << std::endl;
-            std::cout << "    Minimum TTL: " <<  std::dec << minimum <<  std::hex << std::endl;
-            std::cout << ")" << std::endl;
-            local_pointer = rdata_pointer + 17;
-
+            if(first_loop == false)
+            {
+                std::cout << std::endl;
+                std::cout << "[Authority Section]" << std::endl;
+                first_loop = true;
+            }
+            utility_functions.get_rdata_string(result.first,au_lenght,au_ttl,au_class,au_type,rdata_pointer,  question_pointer - 10,utility_functions );
         }
-        else if (au_type == 2)  // NS Record
-        {
-            const u_char *rdata_pointer = local_pointer + lenght + 10;
-            auto ns_result = utility_functions.parse_auth_info(rdata_pointer, beggining - 10);
-            std::string ns_name = ns_result.first;
-            std::cout << name << " " << std::dec << au_ttl << " " << utility_functions.get_class_type(au_class) << " " << utility_functions.get_record_type(au_type) << " " << ns_name << std::endl;
-            local_pointer = rdata_pointer + ns_result.second;
-        }
-
+        local_pointer = rdata_pointer + au_lenght;
         ns_count = ns_count - 1;
     }
 
@@ -290,13 +273,9 @@ const u_char * PacketProcessing::print_authority_section(const u_char *authority
 
 void PacketProcessing::print_additional_section(const u_char *additional_pointer, Utils utility_functions, const u_char *question_pointer, uint16_t ar_count)
 {
-    (void)utility_functions;
-    (void)ar_count;
-
     const u_char * local_pointer = additional_pointer;
     const u_char *beggining = question_pointer;
-
-    std::cout << "[Additional Section]" << std::endl;
+    bool first_loop = false;
 
     while(ar_count > 0)
     {
@@ -307,8 +286,18 @@ void PacketProcessing::print_additional_section(const u_char *additional_pointer
         uint16_t a_class = ntohs(*(uint16_t *)(local_pointer + lenght + 2));
         uint16_t a_ttl = ntohs(*(uint16_t *)(local_pointer + lenght + 6));
         uint16_t a_lenght = ntohs(*(uint16_t *)(local_pointer + lenght + 8));
-        const u_char* data_pointer = local_pointer + lenght + 10;
-        std::string a_data = utility_functions.get_rdata_string(result.first,a_lenght,a_ttl,a_class,a_type,data_pointer,  question_pointer - 10,utility_functions );
+
+        if(utility_functions.get_record_type(a_type)  != "Unknown")
+        {
+            if(first_loop == false)
+            {
+                std::cout << std::endl;
+                std::cout << "[Additional Section]" << std::endl;
+                first_loop = true;
+            }
+            const u_char* data_pointer = local_pointer + lenght + 10;
+            utility_functions.get_rdata_string(result.first,a_lenght,a_ttl,a_class,a_type,data_pointer,  question_pointer - 10,utility_functions );
+        }
         local_pointer = local_pointer + a_lenght + 12;
         ar_count = ar_count - 1;
     }

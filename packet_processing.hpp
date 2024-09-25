@@ -31,7 +31,7 @@ class PacketProcessing
         static void process_ipv6_port(const u_char *frame);
         static std::pair<const u_char*, uint8_t> print_identifier_and_flags(const u_char *frame, u_int16_t type, parser *parse);
         static void print_dns_information(const u_char *frame, const u_char *pointer, parser *parse, uint8_t qr);
-        static const u_char *  print_question_sections(const u_char *pointer, Utils utility_functions, const u_char *frame);
+        static const u_char *  print_question_sections(const u_char *pointer, Utils utility_functions, const u_char *frame, uint16_t qd_count);
         static const u_char * print_answer_section(const u_char *authority_pointer, Utils utility_functions, const u_char *question_pointer,  uint16_t an_count);
         static const u_char * print_authority_section(const u_char *authority_pointer, Utils utility_functions, const u_char *question_pointer, uint16_t ar_count);
         static void print_additional_section(const u_char *authority_pointer, Utils utility_functions, const u_char *question_pointer, uint16_t ar_count);
