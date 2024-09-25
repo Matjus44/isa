@@ -79,11 +79,10 @@ std::string Utils::get_class_type(uint16_t q_class)
     }
 }
 
-void Utils::get_rdata_string(std::string name,uint16_t a_lenght,uint32_t a_ttl,uint16_t a_class,uint16_t a_type,const u_char *rdata_ptr, const u_char *frame, Utils utility_functions)
+void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,uint16_t a_type,const u_char *rdata_ptr, const u_char *frame, Utils utility_functions)
 {
     std::stringstream rdata_stream;
     const u_char * local_pointer = rdata_ptr;
-    (void)a_lenght;
 
     if (a_type == 1)  // Type A (IPv4)
     {
@@ -199,4 +198,33 @@ int Utils::get_domain_name_length(const u_char *beginning_of_section)
     }
 
     return length;
+}
+
+bool Utils::string_exists_in_file(FILE *file, const std::string &str) 
+{
+    char line[256];  
+    rewind(file);
+
+    while (fgets(line, sizeof(line), file)) 
+    {
+        // Remove any newline characters from the line
+        line[strcspn(line, "\r\n")] = 0;
+
+        // Check if the string matches the current line
+        if (str == line) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void Utils::add_string_to_file(FILE *file, const std::string &str) 
+{
+    if (!string_exists_in_file(file, str)) 
+    {
+        fseek(file, 0, SEEK_END);
+        fputs((str + "\n").c_str(), file);
+        fflush(file);
+    }
 }
