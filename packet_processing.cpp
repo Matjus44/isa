@@ -138,8 +138,8 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
 {
     (void)frame;
     Utils utility_functions;
-    uint16_t an_count = ntohs(*(uint16_t *)(pointer + 6));  // specifying the number of resource records in the answer section.
     uint16_t qd_count = ntohs(*(uint16_t *)(pointer + 4));  // specifying the number of entries in the question section.
+    uint16_t an_count = ntohs(*(uint16_t *)(pointer + 6));  // specifying the number of resource records in the answer section.
     uint16_t ns_count = ntohs(*(uint16_t *)(pointer + 8));  // specifying the number of name server resource records in the authority records section.
     uint16_t ar_count = ntohs(*(uint16_t *)(pointer + 10)); // specifying the number of resource records in the additional records section
     if(!parse->verbose)
@@ -149,16 +149,30 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
     }
     else
     {
-        print_sections(pointer + 10, utility_functions, an_count, frame, ns_count, ar_count);
+        const u_char* next_section = print_sections(pointer + 10, utility_functions, frame);
+        if(an_count != 0)
+        {
+            std::cout << std::endl;
+            next_section = print_answer_section(next_section,utility_functions,pointer+ 10,an_count);
+        }
+        if(ns_count != 0)
+        {
+            std::cout << std::endl;
+            next_section = print_authority_section(next_section,utility_functions,pointer + 10,ns_count);
+        }
+        if(ar_count != 0)
+        {
+            std::cout << std::endl;
+            print_additional_section(next_section,utility_functions,pointer + 10,ar_count);
+        }
+
         std::cout << "=====================================" << std::endl;
     }
 }
 
-void PacketProcessing::print_sections(const u_char *question_pointer, Utils utility_functions, uint16_t an_count, const u_char *frame, uint16_t ns_count, uint16_t ar_count)
+const u_char * PacketProcessing::print_sections(const u_char *question_pointer, Utils utility_functions, const u_char *frame)
 {
-    (void)frame;
-    std::cout << "[Question Section]" << std::endl;
-    int lenght = 0;
+    std::cout << "[Question Section]" << std::endl; 
     auto result = utility_functions.parse_domain_name(question_pointer + 2, frame);
     const u_char *qtype_ptr = question_pointer + result.first.size();
     uint16_t q_type = ntohs(*(uint16_t *)(qtype_ptr + 4));
@@ -171,41 +185,43 @@ void PacketProcessing::print_sections(const u_char *question_pointer, Utils util
     std::cout << result.first << ". " << class_str << " " << type_str << std::endl;
 
     const u_char * answer_pointer = qtype_ptr + 8;
-    const u_char * authority_pointer = nullptr;
 
-    if(an_count != 0)
-    {
-        std::cout << std::endl;
-        std::cout << "[Answer Section]" << std::endl;
-    }
+    return answer_pointer;
+}
+
+const u_char * PacketProcessing::print_answer_section(const u_char *answer_pointer, Utils utility_functions, const u_char *question_pointer, uint16_t an_count)
+{
+    const u_char *local_pointer = answer_pointer;
+    const u_char * authority_pointer = nullptr;
+    int lenght = 0;
+
+    std::cout << "[Answer Section]" << std::endl;
+    
     while(an_count > 0)
     {
-        auto result2 = utility_functions.parse_auth_info(answer_pointer, question_pointer -10);
+        auto result2 = utility_functions.parse_auth_info(local_pointer, question_pointer -10);
         lenght = result2.second;
-        uint16_t a_type = ntohs(*(uint16_t *)(answer_pointer + lenght));
-        uint16_t a_class = ntohs(*(uint16_t *)(answer_pointer + lenght + 2));
-        uint16_t a_ttl = ntohs(*(uint16_t *)(answer_pointer + lenght + 6));
-        uint16_t a_lenght = ntohs(*(uint16_t *)(answer_pointer + lenght + 8));
-        const u_char* data_pointer = answer_pointer + lenght + 10;
+        uint16_t a_type = ntohs(*(uint16_t *)(local_pointer + lenght));
+        uint16_t a_class = ntohs(*(uint16_t *)(local_pointer + lenght + 2));
+        uint16_t a_ttl = ntohs(*(uint16_t *)(local_pointer + lenght + 6));
+        uint16_t a_lenght = ntohs(*(uint16_t *)(local_pointer + lenght + 8));
+        const u_char* data_pointer = local_pointer + lenght + 10;
         std::string a_data = utility_functions.get_rdata_string(data_pointer, a_lenght, a_type, question_pointer - 10);
 
         std::cout << result2.first << " " << std::dec << a_ttl << std::hex << " " <<utility_functions.get_record_type(a_type) << " " << utility_functions.get_class_type(a_class) << " " << a_data << std::endl;
 
-        answer_pointer = answer_pointer + a_lenght + 12;
+        local_pointer = local_pointer + a_lenght + 12;
 
-        // std::cout << "Pointer at answer second one nigger section: 0x" << std::hex << std::setw(2) << std::setfill('0') << (int)*answer_pointer << std::endl;
+        // std::cout << "Pointer at answer second one nigger section: 0x" << std::hex << std::setw(2) << std::setfill('0') << (int)*local_pointer << std::endl;
 
         an_count = an_count - 1;
     }
-    if(ns_count != 0)
-    {
-        std::cout << std::endl;
-        authority_pointer = answer_pointer;
-        print_authority_section(authority_pointer,utility_functions,question_pointer,ns_count, ar_count);
-    }
+
+    authority_pointer = local_pointer;
+    return authority_pointer;
 }
 
-void PacketProcessing::print_authority_section(const u_char *authority_pointer, Utils utility_functions, const u_char *question_pointer, uint16_t ns_count, uint16_t ar_count)
+const u_char * PacketProcessing::print_authority_section(const u_char *authority_pointer, Utils utility_functions, const u_char *question_pointer, uint16_t ns_count)
 {
     const u_char * local_pointer = authority_pointer;
     const u_char *beggining = question_pointer;
@@ -264,17 +280,13 @@ void PacketProcessing::print_authority_section(const u_char *authority_pointer, 
             auto ns_result = utility_functions.parse_auth_info(rdata_pointer, beggining - 10);
             std::string ns_name = ns_result.first;
             std::cout << name << " " << std::dec << au_ttl << " " << utility_functions.get_class_type(au_class) << " " << utility_functions.get_record_type(au_type) << " " << ns_name << std::endl;
-            local_pointer = rdata_pointer + 1;
+            local_pointer = rdata_pointer + ns_result.second;
         }
 
         ns_count = ns_count - 1;
     }
 
-    if(ar_count != 0)
-    {
-        std::cout << std::endl;
-        print_additional_section(local_pointer,utility_functions,question_pointer,ar_count);
-    }
+    return local_pointer;
 }
 
 void PacketProcessing::print_additional_section(const u_char *authority_pointer, Utils utility_functions, const u_char *question_pointer, uint16_t ar_count)
