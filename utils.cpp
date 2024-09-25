@@ -7,49 +7,6 @@
     //     std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)*ptr << " ";
     // }
 
-std::pair<std::string, int> Utils::parse_domain_name(const u_char *beginning_of_section, const u_char *packet_start)
-{
-    std::string domain_name;
-    const u_char *current_ptr = beginning_of_section;
-    int lenght = 0;
-
-    bool first_reference = true;
-
-    while (*current_ptr != 0)
-    {
-        if (*current_ptr == 0xc0)
-        {
-            const u_char *offset = current_ptr + 1;
-
-            // Add offset with the beginning of the raw packet
-            current_ptr = packet_start + *offset;
-            
-            if(first_reference)
-            {
-                lenght = lenght + 2;
-                first_reference = false;
-            }
-        }
-        else
-        {
-            int label_length = *current_ptr;
-            current_ptr++;
-            domain_name.append((const char *)current_ptr, label_length);
-            current_ptr += label_length;
-            if(first_reference)
-            {
-                lenght = lenght + label_length;
-            }
-            if (*current_ptr != 0)
-            {
-                domain_name.append(".");
-            }
-        }
-    }
-
-    return std::make_pair(domain_name, lenght);
-}
-
 std::pair<std::string, int> Utils::parse_auth_info(const u_char *beginning_of_section, const u_char *packet_start)
 {
     std::string domain_name;
@@ -134,7 +91,7 @@ void Utils::get_rdata_string(std::string name,uint16_t a_lenght,uint32_t a_ttl,u
         inet_ntop(AF_INET, rdata_ptr, ipv4, INET_ADDRSTRLEN);
         rdata_stream << ipv4;
 
-        std::cout << name << " " << std::dec << a_ttl << std::hex << " " <<utility_functions.get_record_type(a_type) << " " << utility_functions.get_class_type(a_class) << " " << rdata_stream.str() << std::endl;
+        std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type)  << " " << rdata_stream.str() << std::endl;
     }
     else if (a_type == 28)  // Type AAAA (IPv6)
     {
@@ -142,7 +99,7 @@ void Utils::get_rdata_string(std::string name,uint16_t a_lenght,uint32_t a_ttl,u
         inet_ntop(AF_INET6, rdata_ptr, ipv6, INET6_ADDRSTRLEN);
         rdata_stream << ipv6;
 
-        std::cout << name << " " << std::dec << a_ttl << std::hex << " " <<utility_functions.get_record_type(a_type) << " " << utility_functions.get_class_type(a_class) << " " << rdata_stream.str() << std::endl;
+        std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type)  << " " << rdata_stream.str() << std::endl;
     }
     else if(a_type == 15) // MX
     {
@@ -150,7 +107,7 @@ void Utils::get_rdata_string(std::string name,uint16_t a_lenght,uint32_t a_ttl,u
         auto domain_name_and_length = parse_auth_info(local_pointer, frame); 
         rdata_stream << domain_name_and_length.first;
 
-        std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_record_type(a_type) << " " << utility_functions.get_class_type(a_class) << " " <<  std::dec << preference << std::hex << " " << rdata_stream.str() << std::endl;
+        std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type) << " " <<  std::dec << preference << std::hex << " " << rdata_stream.str() << std::endl;
         
     }
     else if (a_type == 5 || a_type == 2)  // CNAME, NS 
@@ -158,7 +115,7 @@ void Utils::get_rdata_string(std::string name,uint16_t a_lenght,uint32_t a_ttl,u
         auto domain_name_and_length = parse_auth_info(rdata_ptr, frame); 
         rdata_stream << domain_name_and_length.first;
 
-        std::cout << name << " " << std::dec << a_ttl << std::hex << " " <<utility_functions.get_record_type(a_type) << " " << utility_functions.get_class_type(a_class) << " " << rdata_stream.str() << std::endl;
+        std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class)  << " " << utility_functions.get_record_type(a_type) << " " << rdata_stream.str() << std::endl;
     }
     else if(a_type == 6) // SOA
     {
