@@ -185,12 +185,12 @@ void Utils::get_rdata_string(std::string name,uint16_t a_lenght,uint32_t a_ttl,u
             name = "<root>";
         }
 
-        std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type) << " " << mname << " " << mname2 << " (" << std::endl;
-        std::cout << "    Serial Number: " <<  std::dec << serial_number <<  std::hex << std::endl;
-        std::cout << "    Refresh Interval: " <<  std::dec << refresh_interval <<  std::hex << std::endl;
-        std::cout << "    Retry Interval: " <<  std::dec << retry_interval <<  std::hex << std::endl;
-        std::cout << "    Expire Limit: " <<  std::dec << expire_limit <<  std::hex << std::endl;
-        std::cout << "    Minimum TTL: " <<  std::dec << minimum <<  std::hex << std::endl;
+        std::cout << name << " " << std::dec << a_ttl << " IN " << utility_functions.get_record_type(a_type) << " " << mname << " " << mname2 << " (" << std::endl;
+        std::cout << "    " << serial_number << " ; Serial" << std::endl;
+        std::cout << "    " << refresh_interval << " ; Refresh" << std::endl;
+        std::cout << "    " << retry_interval << " ; Retry" << std::endl;
+        std::cout << "    " << expire_limit << " ; Expire" << std::endl;
+        std::cout << "    " << minimum << " ; Minimum TTL" << std::endl;
         std::cout << ")" << std::endl;
     }
     else if (a_type == 33)  // SRV
