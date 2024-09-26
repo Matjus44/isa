@@ -37,5 +37,18 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
 
+    // Close the file if it was opened
+    if (parse.domain)
+    {
+        fclose(parse.domain);
+        parse.domain = nullptr; // Set the pointer to nullptr to avoid invalid access later
+    }
+    // Close the file if it was opened
+    if (parse.translation)
+    {
+        fclose(parse.translation);
+        parse.translation = nullptr; // Set the pointer to nullptr to avoid invalid access later
+    }
+
     exit(0);
 }
