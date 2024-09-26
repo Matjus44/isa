@@ -187,8 +187,6 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
     }
 }
 
-// std::cout << "Pointer at answer second one nigger section: 0x" << std::hex << std::setw(2) << std::setfill('0') << (int)*local_pointer << std::endl;
-
 const u_char * PacketProcessing::print_question_sections(const u_char *question_pointer, Utils &utility_functions, const u_char *frame, uint16_t qd_count, parser *parse, FILE *file)
 {
     const u_char *next_question = question_pointer;

@@ -1,12 +1,5 @@
 #include "utils.hpp"
 
-// Print the entire section in hexadecimal
-    // std::cout << "Hex dump of the section: ";
-    // for (const u_char *ptr = beginning_of_section; *ptr != 0; ++ptr)
-    // {
-    //     std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)*ptr << " ";
-    // }
-
 std::pair<std::string, int> Utils::parse_auth_info(const u_char *beginning_of_section, const u_char *packet_start)
 {
     std::string domain_name;
