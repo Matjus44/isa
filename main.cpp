@@ -32,10 +32,6 @@ int main(int argc, char* argv[])
     {
         network_sniffer.run_pcap(parse);
     } 
-    else
-    {
-        exit(EXIT_FAILURE);
-    }
 
     // Close the file if it was opened
     if (parse.domain)
@@ -50,5 +46,5 @@ int main(int argc, char* argv[])
         parse.translation = nullptr; // Set the pointer to nullptr to avoid invalid access later
     }
 
-    exit(0);
+    return 0;
 }
