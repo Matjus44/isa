@@ -14,6 +14,7 @@ class parser
         bool verbose = false;
         std::string domains_file = "";
         std::string translations_file = "";
+        FILE *domain = nullptr;
 
     public:
         void parse_arguments(int argc, char* argv[]);

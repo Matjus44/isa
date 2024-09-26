@@ -146,44 +146,28 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
         char qr_char = (qr == 0) ? 'Q' : 'R';
         std::cout << "(" <<  qr_char  << " " << an_count << "/" << qd_count << "/" << ns_count << "/" << ar_count << ")" << std::endl;
     }
-    
-    FILE *file = nullptr;
-    if(parse->domains_file != "")
-    {
-        file = fopen(parse->domains_file.c_str(), "a+");
-        if (!file) 
-        {
-            std::cerr << "Error: Failed to open the file: " << parse->domains_file << std::endl;
-            return;
-        }
-    }
 
     const u_char* next_section = nullptr;
     if(qd_count != 0)
     {
-        next_section = print_question_sections(pointer + 10, utility_functions, frame, qd_count, parse, file);
+        next_section = print_question_sections(pointer + 10, utility_functions, frame, qd_count, parse, parse->domain);
     }
     if(an_count != 0)
     {
-        next_section = print_other_sections(next_section,utility_functions,pointer+ 10,an_count,"[Answer Section]", parse, file);
+        next_section = print_other_sections(next_section,utility_functions,pointer+ 10,an_count,"[Answer Section]", parse, parse->domain);
     }
     if(ns_count != 0)
     {
-        next_section = print_other_sections(next_section,utility_functions,pointer + 10,ns_count, "[Authority Section]", parse, file);
+        next_section = print_other_sections(next_section,utility_functions,pointer + 10,ns_count, "[Authority Section]", parse, parse->domain);
     }
     if(ar_count != 0)
     {
-        print_other_sections(next_section,utility_functions,pointer + 10,ar_count, "[Additional Section]", parse, file);
+        print_other_sections(next_section,utility_functions,pointer + 10,ar_count, "[Additional Section]", parse, parse->domain);
     }
 
     if(parse->verbose)
     {
         std::cout << "=====================================" << std::endl;
-    }
-
-    if (file != nullptr) 
-    {
-        fclose(file);
     }
 }
 

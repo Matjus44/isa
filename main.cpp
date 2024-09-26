@@ -8,6 +8,14 @@ int main(int argc, char* argv[])
 
     Sniffer network_sniffer;
 
+    if(parse.domains_file != "")
+    {
+        parse.domain = fopen(parse.domains_file.c_str(), "a+");
+        if (!parse.domain) 
+        {
+            std::cerr << "Error: Failed to open the file: " << parse.domains_file << std::endl;
+        }
+    }
     if(parse.interface != "") 
     {
         network_sniffer.run_sniffer(parse);

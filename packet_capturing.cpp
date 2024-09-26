@@ -93,6 +93,13 @@ void Sniffer::capture_packets(parser &parser , pcap_t *handle)
         pcap_close(handle);
         exit(EXIT_FAILURE);
     }
+
+    // Close the file if it was opened
+    if (parser.domain)
+    {
+        fclose(parser.domain);
+        parser.domain = nullptr; // Set the pointer to nullptr to avoid invalid access later
+    }
     // Close filter
     pcap_close(handle);
 }
