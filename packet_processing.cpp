@@ -210,9 +210,6 @@ const u_char * PacketProcessing::print_question_sections(const u_char *question_
             std::cout << result.first << " " << class_str << " " << type_str << std::endl;
         }
 
-        // Store the domain name from the question section
-        utility_functions.name = result.first;
-
         if(!parse->domains_file.empty())
         {
             utility_functions.add_string_to_file(file,result.first);

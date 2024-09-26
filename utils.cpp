@@ -123,7 +123,7 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
 
         if(rdata_stream.str() == "") // Check for root
         {
-            rdata_stream << ".";
+            rdata_stream << "<root>";
         }
 
         if(parse->verbose)
@@ -133,7 +133,7 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
 
         if(parse->domains_file != "")
         {
-            if(rdata_stream.str() != ".")
+            if(rdata_stream.str() != "<root>")
             {
                 utility_functions.add_string_to_file(file,rdata_stream.str());
             }
