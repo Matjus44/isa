@@ -54,7 +54,7 @@ void Sniffer::build_filter(parser &parser, pcap_t *handle)
     bpf_u_int32 mask;
     struct bpf_program bpf_prog;
 
-    if(parser.interface != "")
+    if(!parser.interface.empty())
     {
         // Lookup network details (netmask, IP range, etc.) for the given interface
         if (pcap_lookupnet(parser.interface.c_str(), &net, &mask, errbuf) == PCAP_ERROR)
@@ -99,6 +99,12 @@ void Sniffer::capture_packets(parser &parser , pcap_t *handle)
     {
         fclose(parser.domain);
         parser.domain = nullptr; // Set the pointer to nullptr to avoid invalid access later
+    }
+    // Close the file if it was opened
+    if (parser.translation)
+    {
+        fclose(parser.translation);
+        parser.translation = nullptr; // Set the pointer to nullptr to avoid invalid access later
     }
     // Close filter
     pcap_close(handle);

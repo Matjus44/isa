@@ -9,15 +9,13 @@
 class parser 
 {
     public:
-        std::string interface = "";
-        std::string pcap = "";
+        std::string interface;
+        std::string pcap;
         bool verbose = false;
-        std::string domains_file = "";
-        std::string translations_file = "";
+        std::string domains_file;
+        std::string translations_file;
         FILE *domain = nullptr;
         FILE *translation = nullptr;
-
-    public:
         void parse_arguments(int argc, char* argv[]);
 };
 

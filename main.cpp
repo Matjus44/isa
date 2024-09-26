@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
 
     Sniffer network_sniffer;
 
-    if(parse.domains_file != "")
+    if(!parse.domains_file.empty())
     {
         parse.domain = fopen(parse.domains_file.c_str(), "a+");
         if (!parse.domain) 
@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
             std::cerr << "Error: Failed to open the file: " << parse.domains_file << std::endl;
         }
     }
-    if(parse.translations_file != "")
+    if(!parse.translations_file.empty())
     {
         parse.translation = fopen(parse.translations_file.c_str(), "a+");
         if (!parse.translation) 
@@ -24,11 +24,11 @@ int main(int argc, char* argv[])
             std::cerr << "Error: Failed to open the file: " << parse.translation << std::endl;
         }
     }
-    if(parse.interface != "") 
+    if(!parse.interface.empty()) 
     {
         network_sniffer.run_sniffer(parse);
     } 
-    else if(parse.pcap != "")
+    else if(!parse.pcap.empty())
     {
         network_sniffer.run_pcap(parse);
     } 

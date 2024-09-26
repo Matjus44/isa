@@ -8,11 +8,11 @@ void parser::parse_arguments(int argc, char *argv[])
 
         std::string arg = argv[i];
 
-        if (arg == "-i" && i + 1 < argc && pcap == "" && interface == "")
+        if (arg == "-i" && i + 1 < argc && pcap.empty() && interface.empty())
         {
             interface = argv[++i];
         }
-        else if (arg == "-r" && i + 1 < argc && interface == "" && pcap == "")
+        else if (arg == "-r" && i + 1 < argc && interface.empty() && pcap.empty())
         {
             pcap = argv[++i];
         }

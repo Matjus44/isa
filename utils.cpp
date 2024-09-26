@@ -87,12 +87,12 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
             std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type)  << " " << rdata_stream.str() << std::endl;
         }
 
-        if(parse->domains_file != "")
+        if(!parse->domains_file.empty())
         {
             utility_functions.add_string_to_file(file,name);
         }
 
-        if(parse->translations_file != "")
+        if(!parse->translations_file.empty())
         {
             std::string name_and_addr = name + " " +rdata_stream.str();
             utility_functions.add_string_to_file(parse->translation,name_and_addr);
@@ -109,12 +109,12 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
             std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type)  << " " << rdata_stream.str() << std::endl;
         }
 
-        if(parse->domains_file != "")
+        if(!parse->domains_file.empty())
         {
             utility_functions.add_string_to_file(file,name);
         }
 
-        if(parse->translations_file != "")
+        if(!parse->translations_file.empty())
         {
             std::string name_and_addr = name + " " +rdata_stream.str();
             utility_functions.add_string_to_file(parse->translation,name_and_addr);
@@ -136,7 +136,7 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
             std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type) << " " <<  std::dec << preference << std::hex << " " << rdata_stream.str() << std::endl;
         }
 
-        if(parse->domains_file != "")
+        if(!parse->domains_file.empty())
         {
             if(rdata_stream.str() != "<root>")
             {
@@ -156,7 +156,7 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
             std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class)  << " " << utility_functions.get_record_type(a_type) << " " << rdata_stream.str() << std::endl;
         }
 
-        if(parse->domains_file != "")
+        if(!parse->domains_file.empty())
         {
             utility_functions.add_string_to_file(file,name);
             utility_functions.add_string_to_file(file,rdata_stream.str());
@@ -187,7 +187,7 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
             name = "<root>";
         }
 
-        if(parse->domains_file != "")
+        if(!parse->domains_file.empty())
         {
             if(name != "<root>")
             {
@@ -217,7 +217,7 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
         auto target_result = utility_functions.parse_auth_info(local_pointer + 6, frame);
         std::string target = target_result.first;
 
-        if(parse->domains_file != "")
+        if(!parse->domains_file.empty())
         {
             utility_functions.add_string_to_file(file,name);
             utility_functions.add_string_to_file(file,target);
