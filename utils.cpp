@@ -79,7 +79,7 @@ std::string Utils::get_class_type(uint16_t q_class)
     }
 }
 
-void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,uint16_t a_type,const u_char *rdata_ptr, const u_char *frame, Utils utility_functions, parser *parse)
+void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,uint16_t a_type,const u_char *rdata_ptr, const u_char *frame, Utils &utility_functions, parser *parse, FILE* file)
 {
     std::stringstream rdata_stream;
     const u_char * local_pointer = rdata_ptr;
@@ -93,6 +93,11 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
         {
             std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type)  << " " << rdata_stream.str() << std::endl;
         }
+
+        if(parse->domains_file != "")
+        {
+            utility_functions.add_string_to_file(file,name);
+        }
     }
     else if (a_type == 28)  // Type AAAA (IPv6)
     {
@@ -104,16 +109,35 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
         {
             std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type)  << " " << rdata_stream.str() << std::endl;
         }
+
+        if(parse->domains_file != "")
+        {
+            utility_functions.add_string_to_file(file,name);
+        }
     }
     else if(a_type == 15) // MX
     {
         uint16_t preference = ntohs(*(uint16_t *)(local_pointer));
-        auto domain_name_and_length = parse_auth_info(local_pointer, frame); 
+        auto domain_name_and_length = parse_auth_info(local_pointer + 2, frame); 
         rdata_stream << domain_name_and_length.first;
+
+        if(rdata_stream.str() == "") // Check for root
+        {
+            rdata_stream << ".";
+        }
 
         if(parse->verbose)
         {
             std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type) << " " <<  std::dec << preference << std::hex << " " << rdata_stream.str() << std::endl;
+        }
+
+        if(parse->domains_file != "")
+        {
+            if(rdata_stream.str() != ".")
+            {
+                utility_functions.add_string_to_file(file,rdata_stream.str());
+            }
+            utility_functions.add_string_to_file(file,name);
         }
         
     }
@@ -125,6 +149,12 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
         if(parse->verbose)
         {
             std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class)  << " " << utility_functions.get_record_type(a_type) << " " << rdata_stream.str() << std::endl;
+        }
+
+        if(parse->domains_file != "")
+        {
+            utility_functions.add_string_to_file(file,name);
+            utility_functions.add_string_to_file(file,rdata_stream.str());
         }
     }
     else if(a_type == 6) // SOA
@@ -147,13 +177,23 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
         uint32_t expire_limit = ntohl(*(uint32_t *)(local_pointer + 12));
         uint32_t minimum = ntohl(*(uint32_t *)(local_pointer + 16));
 
+        if(name == "") // check for roots
+        {
+            name = "<root>";
+        }
+
+        if(parse->domains_file != "")
+        {
+            if(name != "<root>")
+            {
+                utility_functions.add_string_to_file(file,name);
+            }
+            utility_functions.add_string_to_file(file,mname);
+            utility_functions.add_string_to_file(file,mname2);
+        }
+
         if(parse->verbose)
         {
-            if(name == "")
-            {
-                name = "<root>";
-            }
-
             std::cout << name << " " << std::dec << a_ttl << " IN " << utility_functions.get_record_type(a_type) << " " << mname << " " << mname2 << " (" << std::endl;
             std::cout << "    " << serial_number << " ; Serial" << std::endl;
             std::cout << "    " << refresh_interval << " ; Refresh" << std::endl;
@@ -172,6 +212,12 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
         auto target_result = utility_functions.parse_auth_info(local_pointer + 6, frame);
         std::string target = target_result.first;
 
+        if(parse->domains_file != "")
+        {
+            utility_functions.add_string_to_file(file,name);
+            utility_functions.add_string_to_file(file,target);
+        }
+
         if(parse->verbose)
         {
             std::cout << name << " " << std::dec << a_ttl << std::hex << " " 
@@ -187,6 +233,8 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
     {
         rdata_stream << "Not supported record type";
     }
+
+    
 }
 
 int Utils::get_domain_name_length(const u_char *beginning_of_section)
@@ -217,31 +265,44 @@ int Utils::get_domain_name_length(const u_char *beginning_of_section)
     return length;
 }
 
-bool Utils::string_exists_in_file(FILE *file, const std::string &str) 
+std::string Utils::trim(const std::string& str) 
 {
-    char line[256];  
+    size_t first = str.find_first_not_of(' ');
+    size_t last = str.find_last_not_of(' ');
+    return str.substr(first, (last - first + 1));
+}
+
+bool Utils::name_exists_in_file(FILE *file, const std::string &name) 
+{
+    char line[500];
+
     rewind(file);
 
     while (fgets(line, sizeof(line), file)) 
     {
-        // Remove any newline characters from the line
         line[strcspn(line, "\r\n")] = 0;
+        std::string fileLine = line;
 
-        // Check if the string matches the current line
-        if (str == line) {
-            return true;
+        if (fileLine == trim(name)) 
+        {
+            return true; 
         }
     }
-
-    return false;
+    return false; 
 }
 
-void Utils::add_string_to_file(FILE *file, const std::string &str) 
+void Utils::add_string_to_file(FILE *file, std::string str) 
 {
-    if (!string_exists_in_file(file, str)) 
+    if (file == nullptr) 
     {
-        fseek(file, 0, SEEK_END);
+        std::cerr << "Error: file pointer is null!" << std::endl;
+        return;
+    }
+    // Check if the name is already in the file
+    if (!name_exists_in_file(file, str)) 
+    {
+        // Move to the end of the file to append the new str
         fputs((str + "\n").c_str(), file);
-        fflush(file);
+        fflush(file); // Ensure the name is written to the file immediately
     }
 }
