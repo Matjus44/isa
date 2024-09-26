@@ -16,6 +16,14 @@ int main(int argc, char* argv[])
             std::cerr << "Error: Failed to open the file: " << parse.domains_file << std::endl;
         }
     }
+    if(parse.translations_file != "")
+    {
+        parse.translation = fopen(parse.translations_file.c_str(), "a+");
+        if (!parse.translation) 
+        {
+            std::cerr << "Error: Failed to open the file: " << parse.translation << std::endl;
+        }
+    }
     if(parse.interface != "") 
     {
         network_sniffer.run_sniffer(parse);

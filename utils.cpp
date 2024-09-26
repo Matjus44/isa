@@ -91,6 +91,12 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
         {
             utility_functions.add_string_to_file(file,name);
         }
+
+        if(parse->translations_file != "")
+        {
+            std::string name_and_addr = name + " " +rdata_stream.str();
+            utility_functions.add_string_to_file(parse->translation,name_and_addr);
+        }
     }
     else if (a_type == 28)  // Type AAAA (IPv6)
     {
@@ -106,6 +112,12 @@ void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,ui
         if(parse->domains_file != "")
         {
             utility_functions.add_string_to_file(file,name);
+        }
+
+        if(parse->translations_file != "")
+        {
+            std::string name_and_addr = name + " " +rdata_stream.str();
+            utility_functions.add_string_to_file(parse->translation,name_and_addr);
         }
     }
     else if(a_type == 15) // MX

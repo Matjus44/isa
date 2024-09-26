@@ -150,19 +150,19 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
     const u_char* next_section = nullptr;
     if(qd_count != 0)
     {
-        next_section = print_question_sections(pointer + 10, utility_functions, frame, qd_count, parse, parse->domain);
+        next_section = print_question_sections(pointer + 10, utility_functions, frame, qd_count, parse);
     }
     if(an_count != 0)
     {
-        next_section = print_other_sections(next_section,utility_functions,pointer+ 10,an_count,"[Answer Section]", parse, parse->domain);
+        next_section = print_other_sections(next_section,utility_functions,pointer+ 10,an_count,"[Answer Section]", parse);
     }
     if(ns_count != 0)
     {
-        next_section = print_other_sections(next_section,utility_functions,pointer + 10,ns_count, "[Authority Section]", parse, parse->domain);
+        next_section = print_other_sections(next_section,utility_functions,pointer + 10,ns_count, "[Authority Section]", parse);
     }
     if(ar_count != 0)
     {
-        print_other_sections(next_section,utility_functions,pointer + 10,ar_count, "[Additional Section]", parse, parse->domain);
+        print_other_sections(next_section,utility_functions,pointer + 10,ar_count, "[Additional Section]", parse);
     }
 
     if(parse->verbose)
@@ -171,7 +171,7 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
     }
 }
 
-const u_char * PacketProcessing::print_question_sections(const u_char *question_pointer, Utils &utility_functions, const u_char *frame, uint16_t qd_count, parser *parse, FILE *file)
+const u_char * PacketProcessing::print_question_sections(const u_char *question_pointer, Utils &utility_functions, const u_char *frame, uint16_t qd_count, parser *parse)
 {
     const u_char *next_question = question_pointer;
 
@@ -194,7 +194,7 @@ const u_char * PacketProcessing::print_question_sections(const u_char *question_
 
         if(!parse->domains_file.empty())
         {
-            utility_functions.add_string_to_file(file,result.first);
+            utility_functions.add_string_to_file(parse->domain,result.first);
         }
 
         next_question = qtype_ptr + 6;
@@ -206,7 +206,7 @@ const u_char * PacketProcessing::print_question_sections(const u_char *question_
 }
 
 
-const u_char * PacketProcessing::print_other_sections(const u_char *answer_pointer, Utils &utility_functions, const u_char *question_pointer, uint16_t count, std::string section_type, parser *parse, FILE *file)
+const u_char * PacketProcessing::print_other_sections(const u_char *answer_pointer, Utils &utility_functions, const u_char *question_pointer, uint16_t count, std::string section_type, parser *parse)
 {   
     const u_char *local_pointer = answer_pointer;
     const u_char * authority_pointer = nullptr;
@@ -231,7 +231,7 @@ const u_char * PacketProcessing::print_other_sections(const u_char *answer_point
                 first_loop = true;
             }
             const u_char* data_pointer = local_pointer + lenght + 10;
-            utility_functions.get_rdata_string(result2.first,a_ttl,a_class,a_type,data_pointer,  question_pointer - 10,utility_functions, parse , file);
+            utility_functions.get_rdata_string(result2.first,a_ttl,a_class,a_type,data_pointer,  question_pointer - 10,utility_functions, parse , parse->domain);
         }
 
         local_pointer = local_pointer + a_lenght + 12;
