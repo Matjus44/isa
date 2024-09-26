@@ -2,7 +2,6 @@
 
 static char errbuf[PCAP_ERRBUF_SIZE];
 
-// Method where we call other methods for better track of program run.
 void Sniffer::run_sniffer(parser &parser)
 {
     pcap_t* handle = init_sniffer(parser);
@@ -13,7 +12,7 @@ void Sniffer::run_sniffer(parser &parser)
 void Sniffer::run_pcap(parser &parser)
 {
     pcap_t *handle;
-
+    // Open pcap file
     handle = pcap_open_offline(parser.pcap.c_str(), errbuf);
     if (handle == nullptr) 
     {
@@ -25,7 +24,6 @@ void Sniffer::run_pcap(parser &parser)
     capture_packets(parser, handle);
 }
 
-// Initialize interface
 pcap_t* Sniffer::init_sniffer(parser &parser)
 {
     // Open interface
@@ -35,7 +33,7 @@ pcap_t* Sniffer::init_sniffer(parser &parser)
         std::cerr << "Error: Could not open interface: " << errbuf << std::endl;
         exit(EXIT_FAILURE);
     }
-
+    // Check whether its supported.
     if (pcap_datalink(handle) != DLT_EN10MB)
     {
         std::cerr << "Error: Ethernet not supported on specified interface" << std::endl;
@@ -44,7 +42,6 @@ pcap_t* Sniffer::init_sniffer(parser &parser)
     return handle;
 }
 
-// Build up and set sniffer
 void Sniffer::build_filter(parser &parser, pcap_t *handle)
 {
     // Filter expression for DNS over UDP (port 53)
@@ -84,15 +81,14 @@ void Sniffer::build_filter(parser &parser, pcap_t *handle)
 }
 
 
-// Start capturing packets
 void Sniffer::capture_packets(parser &parser , pcap_t *handle)
 {
-    if (pcap_loop(handle, 0 , PacketProcessing::parse_packet, reinterpret_cast<u_char*>(&parser)) < 0) 
+    if (pcap_loop(handle, 0 , PacketProcessing::parse_packet, reinterpret_cast<u_char*>(&parser)) < 0) // Loop for capturing packets
     {
         std::cerr << "Error: Issue while capturing packets: " << pcap_geterr(handle) << std::endl;
         pcap_close(handle);
         exit(EXIT_FAILURE);
     }
-    // Close filter
+    // Close sniffer
     pcap_close(handle);
 }

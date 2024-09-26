@@ -6,25 +6,25 @@ void parser::parse_arguments(int argc, char *argv[])
     {
         std::string arg = argv[i];
 
-        if (arg == "-i" && i + 1 < argc)  // Argument pro rozhraní
+        if (arg == "-i" && i + 1 < argc)  // Interface
         {
-            interface = argv[++i];  // Nastav rozhraní
+            interface = argv[++i];  // Add into atribute
         }
-        else if (arg == "-r" && i + 1 < argc)  // Argument pro soubor PCAP
+        else if (arg == "-r" && i + 1 < argc)  // PCAP
         {
-            pcap = argv[++i];  // Nastav PCAP soubor
+            pcap = argv[++i];
         }
-        else if (arg == "-v")  // Verbose mód
+        else if (arg == "-v")  // Verbous
         {
-            verbose = true;  // Zapni verbose mód
+            verbose = true; 
         }
-        else if (arg == "-d" && i + 1 < argc)  // Soubor pro ukládání domén
+        else if (arg == "-d" && i + 1 < argc)  // File for storing domains names
         {
-            domains_file = argv[++i];  // Nastav soubor pro domény
+            domains_file = argv[++i];
         }
-        else if (arg == "-t" && i + 1 < argc)  // Soubor pro překlady
+        else if (arg == "-t" && i + 1 < argc)  // File for storing domains names with their adress
         {
-            translations_file = argv[++i];  // Nastav soubor pro překlady
+            translations_file = argv[++i];
         }
         else
         {
@@ -33,7 +33,7 @@ void parser::parse_arguments(int argc, char *argv[])
         }
     }
 
-    // Základní kontrola, že alespoň jeden z parametrů je nastaven
+    // If none of the interface or pcap is in input then exit with and error message
     if (interface.empty() && pcap.empty())
     {
         std::cerr << "Error: Either interface (-i) or pcap file (-r) must be specified." << std::endl;

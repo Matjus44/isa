@@ -177,7 +177,7 @@ const u_char * PacketProcessing::print_question_sections(const u_char *question_
 
     while(qd_count > 0 )
     {
-        auto result = utility_functions.parse_auth_info(next_question + 2, frame);
+        auto result = utility_functions.parse_data(next_question + 2, frame);
         const u_char *qtype_ptr = next_question + result.second;
         uint16_t q_type = ntohs(*(uint16_t *)(qtype_ptr + 2));
         uint16_t q_class = ntohs(*(uint16_t *)(qtype_ptr + 4));
@@ -215,7 +215,7 @@ const u_char * PacketProcessing::print_other_sections(const u_char *answer_point
 
     while(count > 0)
     {
-        auto result2 = utility_functions.parse_auth_info(local_pointer, question_pointer -10);
+        auto result2 = utility_functions.parse_data(local_pointer, question_pointer -10);
         lenght = result2.second;
         uint16_t a_type = ntohs(*(uint16_t *)(local_pointer + lenght));
         uint16_t a_class = ntohs(*(uint16_t *)(local_pointer + lenght + 2));
