@@ -8,6 +8,7 @@ test_files
 /env
 dns-monitor
 domains_file
+translation
 
 ### C++ ###
 # Prerequisites
