@@ -21,7 +21,7 @@
 
 Táto dokumentácia slúži ako podrobný manuál k projektu `Monitorování DNS komunikace`, ktorý sa zameriava na implementáciu monitorovania DNS komuníkacie. Projekt umožňuje zachytávanie DNS sieťových paketov a ich následujúce spracovanie a písanie na výstup.
 
-Dokumentácia obsahuje technické detaily implementácie, spôsoby použitia aplikácie a jej funkcionalít, ako aj postupy testovania a validácie implementovaných funkcií. Okrem toho sa tu nachádzajú aj informácie o doplnkových funkciách a prípadne zdroje, ktoré boli využité pri vytváraní projektu. Informácie o zadaní projektu viz. [2].
+Dokumentácia obsahuje technické detaily implementácie, spôsoby použitia aplikácie a jej funkcionalít, ako aj postupy testovania a validácie implementovaných funkcií. Okrem toho sa tu nachádzajú aj informácie o doplnkových funkciách a prípadne zdroje, ktoré boli využité pri vytváraní projektu. Informácie o zadaní projektu viz. [1].
 
 ## Vstupné argumenty <a name="Vstupné-argumenty"></a>
 
@@ -29,7 +29,7 @@ Program je spúšťaný z príkazového riadka s nasledujúcimi parametrami:
 
 `./dns-monitor (-i <interface> | -p <pcapfile>) [-v] [-d <domainsfile>] [-t <translationsfile>]`
 
-Význam jednotlivých vstupných argumentov je špecifikovaný v zadaní viz. [2].
+Význam jednotlivých vstupných argumentov je špecifikovaný v zadaní viz. [1].
 
 Tento program taktiež podporuje `-help` ktorý vypíše nápovedu, tento argument nesmenie byť zadaný s akýmkoľvek iným vstupným argumentom.
 
@@ -45,32 +45,32 @@ Vo funkcii main sa vytvorí inštancia triedy `Parser` ktorá obsahuje metódu p
 
 ### Vytvorenie a spustenie filtru <a name="Vytvorenie-a-spustenie-filtru"></a>
 
-Po úspešnom spracovaní vstupných argumentov sa vytvorí inštancia triedy `Sniffer` a následne sa zavolá metóda  `void run_sniffer(parser &parser)` alebo  `void run_pcap(parser &parser)` (záleží či spracovávame pakety zo vstupného súboru alebo rozhrania), ktorá berie ako parameter inštačnú triedu `parser`. AK pakety zaznamenávame z rozhrania tak sa inicializuje sniffer pomocou metódy `pcap_t* init_sniffer(parser& parser)` ktorá zahŕňa otvorenie sieťového rozhrania pomocou funkcie `pcap_open_live`. Po inicializácii sniffera sa volá metóda `void build_filter(parser& parser, pcap_t* handle)`, ktorá slúži na vytvorenie a nastavenie filtru pre zachytávanie DNS paketov. Pomocou `pcap_compile` a `pcap_setfilter` sa aplikuje filter na `handle`. Po úspešnej inicializácii a nastavení filtra sa spúšťa zachytávanie sieťových paketov volaním metódy `void capture_packets(parser &parser, pcap_t *handle)`. Táto metóda používa funkciu `pcap_loop`, ktorá kontinuálne zachytáva pakety. Pre viac popísaný význam jednotlivých funkcií filtru viz. [3].
+Po úspešnom spracovaní vstupných argumentov sa vytvorí inštancia triedy `Sniffer` a následne sa zavolá metóda  `void run_sniffer(parser &parser)` alebo  `void run_pcap(parser &parser)` (záleží či spracovávame pakety zo vstupného súboru alebo rozhrania), ktorá berie ako parameter inštačnú triedu `parser`. AK pakety zaznamenávame z rozhrania tak sa inicializuje sniffer pomocou metódy `pcap_t* init_sniffer(parser& parser)` ktorá zahŕňa otvorenie sieťového rozhrania pomocou funkcie `pcap_open_live`. Po inicializácii sniffera sa volá metóda `void build_filter(parser& parser, pcap_t* handle)`, ktorá slúži na vytvorenie a nastavenie filtru pre zachytávanie DNS paketov. Pomocou `pcap_compile` a `pcap_setfilter` sa aplikuje filter na `handle`. Po úspešnej inicializácii a nastavení filtra sa spúšťa zachytávanie sieťových paketov volaním metódy `void capture_packets(parser &parser, pcap_t *handle)`. Táto metóda používa funkciu `pcap_loop`, ktorá kontinuálne zachytáva pakety. Pre viac popísaný význam jednotlivých funkcií filtru viz. [2].
 
 ### Výpis zachytených pakiet <a name="Výpis-zachytených-pakiet"></a>
 
-Funkcia `PacketProcessing::parse_packet` je volaná v cykle, ktorý kontinuálne zachytáva pakety na základe nastavených parametrov sniffera. Najprv sa z hlavičky paketu získa časová značka, ktorá označuje čas, keď bol paket zachytený. Časová značka je formátovaná vo funkcii `print_timestamp`, ktorá konvertuje čas z formátu štruktúry `pcap_pkthdr` do reťazca čitateľného pre človeka.
+Funkcia `PacketProcessing::parse_packet` je volaná v cykle, ktorý kontinuálne zachytáva pakety na základe nastavených parametrov sniffera. Najprv sa z hlavičky paketu získa časová značka, ktorá označuje čas, keď bol paket zachytený. Časová značka je formátovaná vo funkcii `void print_timestamp(const struct pcap_pkthdr *header, parser *parse)`, ktorá konvertuje čas z formátu štruktúry `pcap_pkthdr` do reťazca čitateľného pre človeka.
 
 #### Získanie IP adresy
-Počas spracovania paketu funkcia `print_ip` extrahuje zdrojovú a cieľovú IP adresu. V závislosti od verzie IP protokolu (IPv4 alebo IPv6) sa vyberie zodpovedajúca hlavička a IP adresy sú premenené na reťazec pomocou funkcie `inet_ntop`. Pre IPv4 sa používa štruktúra `ip`, zatiaľ čo pre IPv6 sa používa štruktúra `ip6_hdr`. Výsledné IP adresy sú následne vypísané, buď podrobne (`verbose` mód), alebo v skrátenom formáte.
+Počas spracovania paketu funkcia `void print_ip(const u_char *frame, parser *parse)` extrahuje zdrojovú a cieľovú IP adresu. V závislosti od verzie IP protokolu sa vyberie zodpovedajúca hlavička a IP adresy sú premenené na reťazec pomocou funkcie `inet_ntop`. Pre IPv4 sa používa štruktúra `ip`, zatiaľ čo pre IPv6 sa používa štruktúra `ip6_hdr`. Výsledné IP adresy sú následne vypísané, buď podrobne (`verbose` mód), alebo v skrátenom formáte.
 
 #### Spracovanie portov
-Funkcie `process_ipv4_port` a `process_ipv6_port` spracovávajú informácie o zdrojovom a cieľovom porte pre UDP pakety. Na základe verzie IP protokolu vypisujú tieto informácie, ak je zapnutý `verbose` mód. Tieto funkcie vypisujú zdrojový a cieľový port pre UDP.
+Funkcie `process_ipv4_port(const u_char *frame)` a `process_ipv6_port(const u_char *frame)` spracovávajú informácie o zdrojovom a cieľovom porte pre UDP pakety. Na základe verzie IP protokolu vypisujú tieto informácie, ak je zapnutý `verbose` mód. Tieto funkcie vypisujú zdrojový a cieľový port pre UDP.
 
 #### Identifikátor a príznaky DNS
-Funkcia `print_identifier_and_flags` extrahuje DNS hlavičku z UDP rámca a následne vypíše identifikátor DNS transakcie a jednotlivé príznaky (flags). Ak je povolený `verbose` mód, vypisujú sa detaily ako QR (Query/Response), Opcode, AA (Authoritative Answer), TC (Truncated), RD (Recursion Desired), RA (Recursion Available), AD (Authenticated Data), CD (Checking Disabled) a RCODE (Response Code). Tieto príznaky sú dôležité pre pochopenie správania DNS požiadaviek a odpovedí.
+Funkcia `std::pair<const u_char*, uint8_t> print_identifier_and_flags(const u_char *frame, u_int16_t type, parser *parse)` extrahuje DNS hlavičku z UDP rámca a následne vypíše identifikátor DNS transakcie a jednotlivé príznaky. Ak je povolený `verbose` mód, vypisujú sa detaily ako QR, počet sekcií, a podobne. viz[3]. 
 
 #### DNS informácie
-Funkcia `print_dns_information` spracováva jednotlivé sekcie DNS paketu – `Question`, `Answer`, `Authority`, a `Additional` sekcie. Najprv vypíše štatistiku o počte záznamov v každej sekcii, a následne volá pomocné funkcie na ich detailné spracovanie. V prípade, že nie je zapnutý `verbose` mód, vypíše len základné informácie o počte záznamov vo formáte `(QR AN/QD/NS/AR)`.
+Funkcia `void print_dns_information(const u_char *frame, const u_char *pointer, parser *parse, uint8_t qr)` V tejto funkcii sa kontroluje či bol zadaný paramter `verbous`, ak áno tak sa vypíšú informácie v špecifikovanom formáte viz [1], následne sa volajú pomocné funkcie na zpracovanie DNS sections
+pomocou funkcií `print_question_sections` a `print_other_sections`. Každá paketa je oddelená formátovacou čiarou (`=====================================`) pre lepšiu čitateľnosť výpisu, ak je zapnutý `verbose` mód.
 
 #### Spracovanie DNS otázok
-Funkcia `print_question_sections` spracováva DNS otázky, kde vypíše doménové meno, typ záznamu a triedu záznamu, ak je povolený `verbose` mód. Funkcia taktiež pridáva doménové mená do súboru, ak je to nastavené pomocou parametra `domains_file`.
+Funkcia `print_question_sections` spracováva DNS otázky, kde vypíše doménové meno, typ záznamu a triedu záznamu, ak je povolený `verbose` mód. Funkcia taktiež pridáva doménové mená do súboru, ak je to nastavené pomocou parametra `domains_file`, pre parsovanie mena sa volá funkcia `parse_data`.
 
 #### Spracovanie ďalších sekcií
-Funkcia `print_other_sections` spracováva záznamy v sekciách `Answer`, `Authority`, a `Additional`. Pre každý záznam vypíše meno, typ záznamu, triedu, TTL (Time-to-Live) a ďalšie detaily. Pomocou funkcie `parse_rdata_and_print` sa následne spracuje obsah záznamov, čo zahŕňa rôzne typy DNS záznamov, ako napríklad A, AAAA, NS, MX a iné.
+Funkcia `print_other_sections` spracováva záznamy v sekciách `Answer`, `Authority`, a `Additional`. Pre každý záznam vypíše meno, typ záznamu, triedu, TTL a ďalšie detaily. Pomocou funkcie `parse_rdata_and_print` sa následne spracuje obsah záznamov, čo zahŕňa rôzne typy DNS záznamov, ako napríklad A, AAAA, NS, MX a iné.
 
-Každá sekcia je oddelená formátovacou čiarou (`=====================================`) pre lepšiu čitateľnosť výpisu, ak je zapnutý `verbose` mód.
-
+***Funkcie su bližie definované v hlavičkových súboroch.***
 
 ## Ilustrovaná funkcionalita <a name="Ilustrovaná-funkcionalita"></a>
 
@@ -155,52 +155,153 @@ std::pair<std::string, int> Utils::parse_data(const u_char *beginning_of_section
 }
 ```
 
+
 ## Testovanie <a name="Testovanie"></a>
-
-**Program bol úspešne testovaný pomocou posielanie paketov príkazom ping cez terminál.**
-
-**Program bol spustený následujúcim príkazom:** `sudo ./ipk-sniffer -i eth0`
 
 **Testovacie prostredie:** WSL.
 
-**Dôvod testovania:** Overenie funkcionality.
+*Program bol úspešne testovaný pomocou posielanie paketov príkazom ping cez terminál a ich následovné porovnávanie v aplikácii wireshark.*
 
-**Výstup:**
+### Record type AAAA (Answer section) 
 
+#### `verbous`
 ```
-timestamp: 2024-04-22T14:11:00+02:00
-src MAC: 01:00:5E:7F:FF:FA
-dst MAC: 00:15:5D:53:5D:66
-frame length: 216 bytes
-src IP: 172.18.208.1
-dst IP: 239.255.255.250
-src port: 55227
-dst port: 1900
+2024-09-20 13:34:53 SrcIP: 2001:4860:4860::8888 -> DstIP: 2001:930:107:86a3:7c20:b664:8a1b:f323 (R 1/1/0/0)
+```
+#### bez `verbous` argumentu
+```
+Timestamp: 2024-09-20 13:34:53
+SrcIP: 2001:4860:4860::8888
+DstIP: 2001:930:107:86a3:7c20:b664:8a1b:f323
+SrcPort: UDP/53
+DstPort: UDP/54218
+Identifier: 0x4be4
+Flags: QR=1, OPCODE=0, AA=0, TC=0, RD=1, RA=1, AD=0, CD=0, RCODE=0
 
-0x0000: 01 00 5e 7f ff fa 00 15  5d 53 5d 66 08 00 45 00   ..^..... ]S]f..E.
-0x0010: 00 ca 83 5b 00 00 01 11  c9 b9 ac 12 d0 01 ef ff   ...[.... ........
-0x0020: ff fa d7 bb 07 6c 00 b6  b1 99 4d 2d 53 45 41 52   .....l.. ..M-SEAR
-0x0030: 43 48 20 2a 20 48 54 54  50 2f 31 2e 31 0d 0a 48   CH * HTT P/1.1..H
-0x0040: 4f 53 54 3a 20 32 33 39  2e 32 35 35 2e 32 35 35   OST: 239 .255.255
-0x0050: 2e 32 35 30 3a 31 39 30  30 0d 0a 4d 41 4e 3a 20   .250:190 0..MAN: 
-0x0060: 22 73 73 64 70 3a 64 69  73 63 6f 76 65 72 22 0d   "ssdp:di scover".
-0x0070: 0a 4d 58 3a 20 31 0d 0a  53 54 3a 20 75 72 6e 3a   .MX: 1.. ST: urn:
-0x0080: 64 69 61 6c 2d 6d 75 6c  74 69 73 63 72 65 65 6e   dial-mul tiscreen
-0x0090: 2d 6f 72 67 3a 73 65 72  76 69 63 65 3a 64 69 61   -org:ser vice:dia
-0x00a0: 6c 3a 31 0d 0a 55 53 45  52 2d 41 47 45 4e 54 3a   l:1..USE R-AGENT:
-0x00b0: 20 47 6f 6f 67 6c 65 20  43 68 72 6f 6d 65 2f 31    Google  Chrome/1
-0x00c0: 32 34 2e 30 2e 36 33 36  37 2e 36 31 20 57 69 6e   24.0.636 7.61 Win
-0x00d0: 64 6f 77 73 0d 0a 0d 0a                            dows....
+[Question Section]
+accounts.google.com IN AAAA
 
+[Answer Section]
+accounts.google.com 20 IN AAAA 2a00:1450:4013:c14::54
+=====================================
 ```
 
-**Porovanie výstupu:**  Výstup bol zhodný s očakávaným výstupom.
+![Alt text](pictures/AnswerAAAA.png "Optional title")
 
+### Record type A (Answer section) 
+
+```
+Timestamp: 2024-09-20 12:03:46
+SrcIP: 2001:4860:4860::8888
+DstIP: 2001:930:107:86a3:7c20:b664:8a1b:f323
+SrcPort: UDP/53
+DstPort: UDP/62098
+Identifier: 0x3ffe
+Flags: QR=1, OPCODE=0, AA=0, TC=0, RD=1, RA=1, AD=0, CD=0, RCODE=0
+
+[Question Section]
+occ-0-4609-778.1.nflxso.net IN A
+
+[Answer Section]
+occ-0-4609-778.1.nflxso.net 10 IN A 195.22.197.119
+occ-0-4609-778.1.nflxso.net 10 IN A 195.22.197.129
+=====================================
+```
+
+![Alt text](pictures/AnswerA.png "Optional title")
+
+### Record type SOA (Authority section)
+
+```
+Timestamp: 2024-09-20 12:04:33
+SrcIP: 2001:4860:4860::8888
+DstIP: 2001:930:107:86a3:7c20:b664:8a1b:f323
+SrcPort: UDP/53
+DstPort: UDP/53250
+Identifier: 0x4256
+Flags: QR=1, OPCODE=0, AA=0, TC=0, RD=1, RA=1, AD=0, CD=0, RCODE=3
+
+[Question Section]
+wpad.hgw.local IN A
+
+[Authority Section]
+<root> 86399 IN SOA a.root-servers.net nstld.verisign-grs.com (
+    2024092000 ; Serial
+    1800 ; Refresh
+    900 ; Retry
+    604800 ; Expire
+    86400 ; Minimum TTL
+)
+=====================================
+```
+
+![Alt text](pictures/AuthoritySOA.png "Optional title")
+
+### Record type NS (Authority section), Record type A, AAAA (Additional section)
+
+```
+Timestamp: 2024-09-25 11:55:31
+SrcIP: 147.229.191.143
+DstIP: 147.229.193.87
+SrcPort: UDP/53
+DstPort: UDP/53760
+Identifier: 0xb4e1
+Flags: QR=1, OPCODE=0, AA=0, TC=0, RD=1, RA=1, AD=0, CD=0, RCODE=0
+
+[Question Section]
+www.vut.cz IN A
+
+[Answer Section]
+www.vut.cz 68 IN A 147.229.2.90
+
+[Authority Section]
+vut.cz 68 IN NS rhino.cis.vutbr.cz
+vut.cz 68 IN NS pipit.cis.vutbr.cz
+
+[Additional Section]
+pipit.cis.vutbr.cz 283 IN A 77.93.219.110
+pipit.cis.vutbr.cz 283 IN AAAA 2a01:430:120::4d5d:db6e
+rhino.cis.vutbr.cz 68 IN A 147.229.3.10
+rhino.cis.vutbr.cz 68 IN AAAA 2001:67c:1220:e000::93e5:30a
+=====================================
+```
+![Alt text](pictures/AuthorityNS.png "Optional title")
+
+### Record type MX (Answer section section), record type A, AAAA (Additional section), record type NS (Answer section)
+
+```
+Timestamp: 2024-09-25 12:39:10
+SrcIP: 147.229.191.143
+DstIP: 147.229.193.87
+SrcPort: UDP/53
+DstPort: UDP/50249
+Identifier: 0x1971
+Flags: QR=1, OPCODE=0, AA=0, TC=0, RD=1, RA=1, AD=0, CD=0, RCODE=0
+
+[Question Section]
+example.com IN MX
+
+[Answer Section]
+example.com 86400 IN MX 0 <root>
+
+[Authority Section]
+example.com 72806 IN NS b.iana-servers.net
+example.com 72806 IN NS a.iana-servers.net
+
+[Additional Section]
+a.iana-servers.net 60 IN A 199.43.135.53
+a.iana-servers.net 60 IN AAAA 2001:500:8f::53
+b.iana-servers.net 60 IN A 199.43.133.53
+b.iana-servers.net 60 IN AAAA 2001:500:8d::53
+=====================================
+```
+
+![Alt text](pictures/AnswerMX.png "Optional title")
 
 ## Bibliografia <a name="Bibliografia"></a>
 
-[1]: NESFIT . (2024). Documentation Instructions , IPK Projects 2024 [online]. Publisher: Brno University of Technology. Retrieved March 31, 2024, [cit. 2024-04-15] Available at: https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024#documentation-instructions
+[1]: Radek Hranický. (2024). Monitorování DNS komunikace , ISA Projects 2024 [online]. Publisher: Brno University of Technology. Retrieved September 20, 2024, [cit. 2024-09-25] Available at: https://www.vut.cz/studis/student.phtml?script_name=zadani_detail&apid=280945&zid=58123
 
-[2]: Vladimir Vesely . (2024). Project 2 Zeta , IPK Projects 2024 [online]. Publisher: Brno University of Technology. Retrieved March 31, 2024, [cit. 2024-04-15] Available at: https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master/Project%202/zeta
+[2]: ENGRSALMANSHAIKH . (DECEMBER 9, 2014). NETWORK PACKET SNIFFER C++ [online]. Publisher: UNCATEGORIZED . Retrieved September 20, 2024, [cit. 2024-09-25] Available at: https://engrsalmanshaikh.wordpress.com/2014/12/09/network-packet-sniffer-c/
 
-[3]: ENGRSALMANSHAIKH . (DECEMBER 9, 2014). NETWORK PACKET SNIFFER C++ [online]. Publisher: UNCATEGORIZED . Retrieved April 31, 2024, [cit. 2024-04-15] Available at: https://engrsalmanshaikh.wordpress.com/2014/12/09/network-packet-sniffer-c/
+[3]: CS4700/CS5700 . (JANUARY 24, 2011). Simple DNS Client [online]. Publisher: UNCATEGORIZED . Retrieved September 20, 2024, [cit. 2024-09-25] Available at: https://mislove.org/teaching/cs4700/spring11/handouts/project1-primer.pdf
