@@ -21,7 +21,7 @@
 
 Táto dokumentácia slúži ako podrobný manuál k projektu `Monitorování DNS komunikace`, ktorý sa zameriava na implementáciu monitorovania DNS komuníkacie. Projekt umožňuje zachytávanie DNS sieťových paketov a ich následujúce spracovanie a písanie na výstup.
 
-Dokumentácia obsahuje technické detaily implementácie, spôsoby použitia aplikácie a jej funkcionalít, ako aj postupy testovania a validácie implementovaných funkcií. Okrem toho sa tu nachádzajú aj informácie o doplnkových funkciách a prípadne zdroje, ktoré boli využité pri vytváraní projektu. Informácie o zadaní projektu viz. [1].
+Dokumentácia obsahuje technické detaily implementácie, spôsoby použitia aplikácie a jej funkcionalít, ako aj postupy testovania a validácie implementovaných funkcií. Okrem toho sa tu nachádzajú aj informácie o doplnkových funkciách a prípadne zdroje, ktoré boli využité pri vytváraní projektu. Informácie o zadaní projektu viz. <a name="ref1">[1]</a>.
 
 ## Vstupné argumenty <a name="Vstupné-argumenty"></a>
 
@@ -29,7 +29,7 @@ Program je spúšťaný z príkazového riadka s nasledujúcimi parametrami:
 
 `./dns-monitor (-i <interface> | -p <pcapfile>) [-v] [-d <domainsfile>] [-t <translationsfile>]`
 
-Význam jednotlivých vstupných argumentov je špecifikovaný v zadaní viz. [1].
+Význam jednotlivých vstupných argumentov je špecifikovaný v zadaní viz. <a name="ref1">[1]</a>.
 
 Tento program taktiež podporuje `-help` ktorý vypíše nápovedu, tento argument nesmenie byť zadaný s akýmkoľvek iným vstupným argumentom.
 
@@ -45,7 +45,7 @@ Vo funkcii main sa vytvorí inštancia triedy `Parser` ktorá obsahuje metódu p
 
 ### Vytvorenie a spustenie filtru <a name="Vytvorenie-a-spustenie-filtru"></a>
 
-Po úspešnom spracovaní vstupných argumentov sa vytvorí inštancia triedy `Sniffer` a následne sa zavolá metóda  `void run_sniffer(parser &parser)` alebo  `void run_pcap(parser &parser)` (záleží či spracovávame pakety zo vstupného súboru alebo rozhrania), ktorá berie ako parameter inštačnú triedu `parser`. AK pakety zaznamenávame z rozhrania tak sa inicializuje sniffer pomocou metódy `pcap_t* init_sniffer(parser& parser)` ktorá zahŕňa otvorenie sieťového rozhrania pomocou funkcie `pcap_open_live`. Po inicializácii sniffera sa volá metóda `void build_filter(parser& parser, pcap_t* handle)`, ktorá slúži na vytvorenie a nastavenie filtru pre zachytávanie DNS paketov. Pomocou `pcap_compile` a `pcap_setfilter` sa aplikuje filter na `handle`. Po úspešnej inicializácii a nastavení filtra sa spúšťa zachytávanie sieťových paketov volaním metódy `void capture_packets(parser &parser, pcap_t *handle)`. Táto metóda používa funkciu `pcap_loop`, ktorá kontinuálne zachytáva pakety. Pre viac popísaný význam jednotlivých funkcií filtru viz. [2].
+Po úspešnom spracovaní vstupných argumentov sa vytvorí inštancia triedy `Sniffer` a následne sa zavolá metóda  `void run_sniffer(parser &parser)` alebo  `void run_pcap(parser &parser)` (záleží či spracovávame pakety zo vstupného súboru alebo rozhrania), ktorá berie ako parameter inštačnú triedu `parser`. AK pakety zaznamenávame z rozhrania tak sa inicializuje sniffer pomocou metódy `pcap_t* init_sniffer(parser& parser)` ktorá zahŕňa otvorenie sieťového rozhrania pomocou funkcie `pcap_open_live`. Po inicializácii sniffera sa volá metóda `void build_filter(parser& parser, pcap_t* handle)`, ktorá slúži na vytvorenie a nastavenie filtru pre zachytávanie DNS paketov. Pomocou `pcap_compile` a `pcap_setfilter` sa aplikuje filter na `handle`. Po úspešnej inicializácii a nastavení filtra sa spúšťa zachytávanie sieťových paketov volaním metódy `void capture_packets(parser &parser, pcap_t *handle)`. Táto metóda používa funkciu `pcap_loop`, ktorá kontinuálne zachytáva pakety. Pre viac popísaný význam jednotlivých funkcií filtru viz. <a name="ref1">[2]</a>.
 
 ### Výpis zachytených pakiet <a name="Výpis-zachytených-pakiet"></a>
 
@@ -58,10 +58,10 @@ Počas spracovania paketu funkcia `void print_ip(const u_char *frame, parser *pa
 Funkcie `process_ipv4_port(const u_char *frame)` a `process_ipv6_port(const u_char *frame)` spracovávajú informácie o zdrojovom a cieľovom porte pre UDP pakety. Na základe verzie IP protokolu vypisujú tieto informácie, ak je zapnutý `verbose` mód. Tieto funkcie vypisujú zdrojový a cieľový port pre UDP.
 
 #### Identifikátor a príznaky DNS
-Funkcia `std::pair<const u_char*, uint8_t> print_identifier_and_flags(const u_char *frame, u_int16_t type, parser *parse)` extrahuje DNS hlavičku z UDP rámca a následne vypíše identifikátor DNS transakcie a jednotlivé príznaky. Ak je povolený `verbose` mód, vypisujú sa detaily ako QR, počet sekcií, a podobne. viz[3]. 
+Funkcia `std::pair<const u_char*, uint8_t> print_identifier_and_flags(const u_char *frame, u_int16_t type, parser *parse)` extrahuje DNS hlavičku z UDP rámca a následne vypíše identifikátor DNS transakcie a jednotlivé príznaky. Ak je povolený `verbose` mód, vypisujú sa detaily ako QR, počet sekcií, a podobne. viz <a name="ref1">[3]</a>. 
 
 #### DNS informácie
-Funkcia `void print_dns_information(const u_char *frame, const u_char *pointer, parser *parse, uint8_t qr)` V tejto funkcii sa kontroluje či bol zadaný paramter `verbous`, ak áno tak sa vypíšú informácie v špecifikovanom formáte viz [1], následne sa volajú pomocné funkcie na zpracovanie DNS sections
+Funkcia `void print_dns_information(const u_char *frame, const u_char *pointer, parser *parse, uint8_t qr)` V tejto funkcii sa kontroluje či bol zadaný paramter `verbous`, ak áno tak sa vypíšú informácie v špecifikovanom formáte viz <a name="ref1">[2]</a>, následne sa volajú pomocné funkcie na zpracovanie DNS sections
 pomocou funkcií `print_question_sections` a `print_other_sections`. Každá paketa je oddelená formátovacou čiarou (`=====================================`) pre lepšiu čitateľnosť výpisu, ak je zapnutý `verbose` mód.
 
 #### Spracovanie DNS otázok
@@ -160,7 +160,7 @@ std::pair<std::string, int> Utils::parse_data(const u_char *beginning_of_section
 
 **Testovacie prostredie:** WSL.
 
-*Program bol úspešne testovaný pomocou posielanie paketov príkazom ping cez terminál a ich následovné porovnávanie v aplikácii wireshark.*
+*Program bol úspešne testovaný pomocou vstupných .pcap súborov a ich následovné porovnávanie v aplikácii wireshark.*
 
 ### Record type AAAA (Answer section) 
 
