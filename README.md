@@ -77,50 +77,117 @@ Každá sekcia je oddelená formátovacou čiarou (`============================
 **Vytvorenie filteru**
 
 ```
-void Sniffer::build_filter(Argument_parser &parser, pcap_t *handle)
+void Sniffer::build_filter(parser &parser, pcap_t *handle)
 {
-    auto filter = filters_parameters(parser);
+    // Filter expression for DNS over UDP (port 53)
+    std::string filter = "udp port 53";
+    
     bpf_u_int32 net;
     bpf_u_int32 mask;
     struct bpf_program bpf_prog;
 
-    if (pcap_lookupnet(parser.interface.c_str(), &net, &mask, errbuf) == PCAP_ERROR)
+    if(!parser.interface.empty())
     {
-        std::cerr << "Error: Looking up network: " << errbuf << std::endl;
-        exit(EXIT_FAILURE);
+        // Lookup network details (netmask, IP range, etc.) for the given interface
+        if (pcap_lookupnet(parser.interface.c_str(), &net, &mask, errbuf) == PCAP_ERROR)
+        {
+            std::cerr << "Error: Looking up network: " << errbuf << std::endl;
+            exit(EXIT_FAILURE);
+        }
     }
+
+    // Compile the filter expression
     if (pcap_compile(handle, &bpf_prog, filter.c_str(), 0, mask) == PCAP_ERROR)
     {
         std::cerr << "Error: Filter compiling: " << pcap_geterr(handle) << std::endl;
         exit(EXIT_FAILURE);
     }
+
+    // Set the compiled filter
     if (pcap_setfilter(handle, &bpf_prog) == PCAP_ERROR)
     {
         std::cerr << "Error: Setting filter: " << pcap_geterr(handle) << std::endl;
-        pcap_freecode(&bpf_prog); // Dealloc pcap_compile
+        pcap_freecode(&bpf_prog); // Free the filter code if an error occurs
         exit(EXIT_FAILURE);
     }
-    pcap_freecode(&bpf_prog); // // Dealloc pcap_compile
+
+    // Free the compiled filter after it's set
+    pcap_freecode(&bpf_prog); 
 }
 ```
 
-**Táto funkcia zobrazuje postupnosť volania funkcií pri vypisavaní paketov na výstup**
+**Parsovanie dát ako napríklad name, adress**
 
 ```
-void PacketProcessing::parse_frame(u_char *user, const struct pcap_pkthdr *header, const u_char *frame)
+std::pair<std::string, int> Utils::parse_data(const u_char *beginning_of_section, const u_char *packet_start)
 {
-    (void)user;
+    std::string data;
+    const u_char *current_ptr = beginning_of_section;
+    int lenght = 0;
+    
+    // Get lenght of data that is goin to be parsed
+    lenght = get_domain_name_length(current_ptr);
 
-    // Print timestamp
-    print_timestamp(header);
+    // Loop till 0 value is occured
+    while (*current_ptr != 0)
+    {
+        // Found reference
+        if (*current_ptr == 0xc0)
+        {
+            const u_char *offset = current_ptr + 1;
 
-    // Parse and print IP addresses and ports if available
-    print_ip_and_ports(frame,header);
-
-    // Print byte offset, hexa, and ASCII
-    print_byte_offset_hexa_ascii(frame, header->len);
+            // Add offset with the beginning of the raw packet
+            current_ptr = packet_start + *offset;
+        }
+        else // Append the bytes into domain_name
+        {
+            int label_length = *current_ptr;
+            current_ptr++;
+            data.append((const char *)current_ptr, label_length);
+            current_ptr += label_length;
+            if (*current_ptr != 0)
+            {
+                data.append(".");
+            }
+        }
+    }
+    return std::make_pair(data, lenght);
 }
 ```
+
+**Pomocná funkcie pre získanie dĺžky parsovaných dát**
+
+```
+int Utils::get_domain_name_length(const u_char *beginning_of_section)
+{
+    const u_char *current_ptr = beginning_of_section;
+    int length = 0; 
+
+    while (*current_ptr != 0)
+    {
+        if ((*current_ptr & 0xC0) == 0xC0) 
+        {
+            // Add 2 because of reference and offset
+            length += 2; 
+            break; 
+        }
+        else
+        {
+            int label_length = *current_ptr; 
+            length += label_length + 1;
+            current_ptr += label_length + 1; 
+        }
+    }
+
+    if ((*current_ptr & 0xC0) != 0xC0)
+    {
+        length += 1;
+    }
+
+    return length;
+}
+```
+
 
 ## Testovanie <a name="Testovanie"></a>
 
