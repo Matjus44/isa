@@ -161,7 +161,7 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
     }
     if(an_count != 0)
     {
-        next_section = print_other_sections(next_section,utility_functions,pointer+ 10,an_count,"[Answer Section]", parse);
+        next_section = print_other_sections(next_section,utility_functions,pointer + 10,an_count,"[Answer Section]", parse);
     }
     if(ns_count != 0)
     {
