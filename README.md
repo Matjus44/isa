@@ -155,40 +155,6 @@ std::pair<std::string, int> Utils::parse_data(const u_char *beginning_of_section
 }
 ```
 
-**Pomocná funkcie pre získanie dĺžky parsovaných dát**
-
-```
-int Utils::get_domain_name_length(const u_char *beginning_of_section)
-{
-    const u_char *current_ptr = beginning_of_section;
-    int length = 0; 
-
-    while (*current_ptr != 0)
-    {
-        if ((*current_ptr & 0xC0) == 0xC0) 
-        {
-            // Add 2 because of reference and offset
-            length += 2; 
-            break; 
-        }
-        else
-        {
-            int label_length = *current_ptr; 
-            length += label_length + 1;
-            current_ptr += label_length + 1; 
-        }
-    }
-
-    if ((*current_ptr & 0xC0) != 0xC0)
-    {
-        length += 1;
-    }
-
-    return length;
-}
-```
-
-
 ## Testovanie <a name="Testovanie"></a>
 
 **Program bol úspešne testovaný pomocou posielanie paketov príkazom ping cez terminál.**
