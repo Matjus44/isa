@@ -64,7 +64,7 @@ class Utils
          * @param parse Pointer to parser that has information given from user.
          * @param file File where data will be extracted in case of -d or -t parameter.
          */
-        void get_rdata_string(std::string name, uint32_t a_ttl, uint16_t a_class, uint16_t a_type, const u_char *rdata_ptr, const u_char *frame, Utils &utility_functions, parser *parse, FILE *file);
+        void parse_rdata_and_print(std::string name, uint32_t a_ttl, uint16_t a_class, uint16_t a_type, const u_char *rdata_ptr, const u_char *frame, Utils &utility_functions, parser *parse, FILE *file);
 
         /**
          * @brief Function for parsing domain name as well as adress and domain in rdata.

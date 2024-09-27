@@ -8,7 +8,6 @@
 #ifndef PACKET_CAPTURING_HPP
 #define PACKET_CAPTURING_HPP
 
-#include "pcap.h"
 #include "argument_parser.hpp"
 #include "packet_processing.hpp"
 

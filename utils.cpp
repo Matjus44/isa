@@ -75,7 +75,7 @@ std::string Utils::get_class_type(uint16_t q_class)
     }
 }
 
-void Utils::get_rdata_string(std::string name,uint32_t a_ttl,uint16_t a_class,uint16_t a_type,const u_char *rdata_ptr, const u_char *frame, Utils &utility_functions, parser *parse, FILE* file)
+void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_class,uint16_t a_type,const u_char *rdata_ptr, const u_char *frame, Utils &utility_functions, parser *parse, FILE* file)
 {
 
     std::stringstream rdata_stream;

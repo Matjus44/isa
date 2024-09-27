@@ -58,7 +58,7 @@ class parser
         FILE *translation = nullptr;
 
         /**
-         * @brief Parses command-line arguments and sets atributes.
+         * @brief Parses command-line arguments and sets class atributes.
          * @param argc The number of arguments passed to the program.
          * @param argv The array of arguments passed to the program.
          */
