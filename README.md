@@ -49,7 +49,28 @@ Po úspešnom spracovaní vstupných argumentov sa vytvorí inštancia triedy `S
 
 ### Výpis zachytených pakiet <a name="Výpis-zachytených-pakiet"></a>
 
-Funkcia `PacketProcessing::parse_packet` je volaná v cykle, ktorý kontinuálne zachytáva pakety na základe nastavených parametrov sniffera.  Najprv sa z hlavičky paketu získa časová značka, ktorá označuje čas, keď bol paket zachytený. 
+Funkcia `PacketProcessing::parse_packet` je volaná v cykle, ktorý kontinuálne zachytáva pakety na základe nastavených parametrov sniffera. Najprv sa z hlavičky paketu získa časová značka, ktorá označuje čas, keď bol paket zachytený. Časová značka je formátovaná vo funkcii `print_timestamp`, ktorá konvertuje čas z formátu štruktúry `pcap_pkthdr` do reťazca čitateľného pre človeka.
+
+#### Získanie IP adresy
+Počas spracovania paketu funkcia `print_ip` extrahuje zdrojovú a cieľovú IP adresu. V závislosti od verzie IP protokolu (IPv4 alebo IPv6) sa vyberie zodpovedajúca hlavička a IP adresy sú premenené na reťazec pomocou funkcie `inet_ntop`. Pre IPv4 sa používa štruktúra `ip`, zatiaľ čo pre IPv6 sa používa štruktúra `ip6_hdr`. Výsledné IP adresy sú následne vypísané, buď podrobne (`verbose` mód), alebo v skrátenom formáte.
+
+#### Spracovanie portov
+Funkcie `process_ipv4_port` a `process_ipv6_port` spracovávajú informácie o zdrojovom a cieľovom porte pre UDP pakety. Na základe verzie IP protokolu vypisujú tieto informácie, ak je zapnutý `verbose` mód. Tieto funkcie vypisujú zdrojový a cieľový port pre UDP.
+
+#### Identifikátor a príznaky DNS
+Funkcia `print_identifier_and_flags` extrahuje DNS hlavičku z UDP rámca a následne vypíše identifikátor DNS transakcie a jednotlivé príznaky (flags). Ak je povolený `verbose` mód, vypisujú sa detaily ako QR (Query/Response), Opcode, AA (Authoritative Answer), TC (Truncated), RD (Recursion Desired), RA (Recursion Available), AD (Authenticated Data), CD (Checking Disabled) a RCODE (Response Code). Tieto príznaky sú dôležité pre pochopenie správania DNS požiadaviek a odpovedí.
+
+#### DNS informácie
+Funkcia `print_dns_information` spracováva jednotlivé sekcie DNS paketu – `Question`, `Answer`, `Authority`, a `Additional` sekcie. Najprv vypíše štatistiku o počte záznamov v každej sekcii, a následne volá pomocné funkcie na ich detailné spracovanie. V prípade, že nie je zapnutý `verbose` mód, vypíše len základné informácie o počte záznamov vo formáte `(QR AN/QD/NS/AR)`.
+
+#### Spracovanie DNS otázok
+Funkcia `print_question_sections` spracováva DNS otázky, kde vypíše doménové meno, typ záznamu a triedu záznamu, ak je povolený `verbose` mód. Funkcia taktiež pridáva doménové mená do súboru, ak je to nastavené pomocou parametra `domains_file`.
+
+#### Spracovanie ďalších sekcií
+Funkcia `print_other_sections` spracováva záznamy v sekciách `Answer`, `Authority`, a `Additional`. Pre každý záznam vypíše meno, typ záznamu, triedu, TTL (Time-to-Live) a ďalšie detaily. Pomocou funkcie `parse_rdata_and_print` sa následne spracuje obsah záznamov, čo zahŕňa rôzne typy DNS záznamov, ako napríklad A, AAAA, NS, MX a iné.
+
+Každá sekcia je oddelená formátovacou čiarou (`=====================================`) pre lepšiu čitateľnosť výpisu, ak je zapnutý `verbose` mód.
+
 
 ## Ilustrovaná funkcionalita <a name="Ilustrovaná-funkcionalita"></a>
 
