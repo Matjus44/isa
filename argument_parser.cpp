@@ -1,3 +1,10 @@
+/*
+ * Program: DNS monitor
+ * Description: Implementation of methods for Parse class.
+ * Author: Matúš Janek
+ * Date: 26.09.2024
+ */
+
 #include "argument_parser.hpp"
 
 int parser::parse_arguments(int argc, char *argv[])

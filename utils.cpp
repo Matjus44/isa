@@ -1,3 +1,10 @@
+/*
+ * Program: DNS monitor
+ * Description: Implementation of methods for Utils class.
+ * Author: Matúš Janek
+ * Date: 26.09.2024
+ */
+
 #include "utils.hpp"
 
 std::pair<std::string, int> Utils::parse_data(const u_char *beginning_of_section, const u_char *packet_start)

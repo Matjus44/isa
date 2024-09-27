@@ -1,3 +1,10 @@
+/*
+ * Program: DNS monitor
+ * Description: Implementation of methods from Sniffer class.
+ * Author: Matúš Janek
+ * Date: 26.09.2024
+ */
+
 #include "packet_capturing.hpp"
 
 static char errbuf[PCAP_ERRBUF_SIZE];

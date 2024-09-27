@@ -1,3 +1,10 @@
+/*
+ * Program: DNS monitor
+ * Description: Implementation of methods from PacketProcessing class.
+ * Author: Matúš Janek
+ * Date: 26.09.2024
+ */
+
 #include "packet_processing.hpp"
 
 void PacketProcessing::parse_packet(u_char *user, const struct pcap_pkthdr *header, const u_char *frame)
