@@ -20,7 +20,11 @@ int main(int argc, char* argv[])
     sa.sa_flags = 0;
     sigaction(SIGSEGV, &sa, nullptr);
     parser parse;
-    parse.parse_arguments(argc,argv);
+    int result = parse.parse_arguments(argc,argv);
+    if(result != 0)
+    {
+        return 1;
+    }
 
     Sniffer network_sniffer;
 

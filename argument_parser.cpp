@@ -1,35 +1,47 @@
 #include "argument_parser.hpp"
 
-void parser::parse_arguments(int argc, char *argv[])
+int parser::parse_arguments(int argc, char *argv[])
 {
+    if (argc == 2 && std::string(argv[1]) == "-help")
+    {
+        std::cout << "./dns-monitor (-i <interface> | -r <pcapfile>) [-v] [-d <domainsfile>] [-t <translationsfile>]\n";
+        std::cout << "Parametry:\n";
+        std::cout << "-i <interface> - název rozhraní, na kterém bude program naslouchat, nebo\n";
+        std::cout << "-r <pcapfile> - název souboru PCAP, který program zpracuje;\n";
+        std::cout << "-v - režim \"verbose\": kompletní výpis detailů o zprávách DNS;\n";
+        std::cout << "-d <domainsfile> - název souboru s doménovými jmény;\n";
+        std::cout << "-t <translationsfile> - název souboru s překladem doménových jmen na IP.\n";
+        return 0;
+    }
+
     for (int i = 1; i < argc; i++)
     {
         std::string arg = argv[i];
 
-        if (arg == "-i" && i + 1 < argc)  // Interface
+        if (arg == "-i" && i + 1 < argc && interface.empty() && pcap.empty())   // Interface
         {
             interface = argv[++i];  // Add into atribute
         }
-        else if (arg == "-r" && i + 1 < argc)  // PCAP
+        else if (arg == "-r" && i + 1 < argc && interface.empty() && pcap.empty())  // PCAP
         {
             pcap = argv[++i];
         }
-        else if (arg == "-v")  // Verbous
+        else if (arg == "-v" && verbose == false)  // Verbous
         {
             verbose = true; 
         }
-        else if (arg == "-d" && i + 1 < argc)  // File for storing domains names
+        else if (arg == "-d" && i + 1 < argc && domains_file.empty())  // File for storing domains names
         {
             domains_file = argv[++i];
         }
-        else if (arg == "-t" && i + 1 < argc)  // File for storing domains names with their adress
+        else if (arg == "-t" && i + 1 < argc && translations_file.empty())  // File for storing domains names with their adress
         {
             translations_file = argv[++i];
         }
         else
         {
             std::cerr << "Unknown argument: " << arg << std::endl;
-            exit(1);
+            return 1;
         }
     }
 
@@ -37,7 +49,9 @@ void parser::parse_arguments(int argc, char *argv[])
     if (interface.empty() && pcap.empty())
     {
         std::cerr << "Error: Either interface (-i) or pcap file (-r) must be specified." << std::endl;
-        exit(1);
+        return 1;
     }
+
+    return 0;
 }
 

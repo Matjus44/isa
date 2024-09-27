@@ -62,7 +62,7 @@ class parser
          * @param argc The number of arguments passed to the program.
          * @param argv The array of arguments passed to the program.
          */
-        void parse_arguments(int argc, char* argv[]);
+        int parse_arguments(int argc, char* argv[]);
 };
 
 #endif
