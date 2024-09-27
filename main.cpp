@@ -35,6 +35,7 @@ int main(int argc, char* argv[])
         if (!parse.domain) 
         {
             std::cerr << "Error: Failed to open the file: " << parse.domains_file << std::endl;
+            return 1;
         }
     }
     // Open or create file for priting out domains names with their adress.
@@ -44,6 +45,7 @@ int main(int argc, char* argv[])
         if (!parse.translation) 
         {
             std::cerr << "Error: Failed to open the file: " << parse.translation << std::endl;
+            return 1;
         }
     }
     // If interface is not empty then we process by running live sniffer
