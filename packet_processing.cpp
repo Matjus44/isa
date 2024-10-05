@@ -158,7 +158,7 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
     if(!parse->verbose)
     {
         char qr_char = (qr == 0) ? 'Q' : 'R';
-        std::cout << "(" <<  qr_char  << " " << an_count << "/" << qd_count << "/" << ns_count << "/" << ar_count << ")" << std::endl;
+        std::cout << "(" <<  qr_char  << " " << qd_count << "/" << an_count << "/" << ns_count << "/" << ar_count << ")" << std::endl;
     }
     const u_char* next_section = nullptr;
     // Check first for the count of the section whether the DNS packet contains it.
@@ -264,10 +264,10 @@ const u_char * PacketProcessing::print_other_sections(const u_char *beggining_of
         }
 
         // Move pointer to next section.
-        local_pointer = local_pointer + lenght2 + 12;
+        //Changed: local_pointer = local_pointer + lenght2 + 12 to local_pointer = local_pointer + lenght2 + lenght + 10;
+        local_pointer = local_pointer + lenght2 + lenght + 10;
         count = count - 1; // Lower count.
     }
-
     next_section = local_pointer;
     return next_section;
 }

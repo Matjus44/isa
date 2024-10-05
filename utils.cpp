@@ -12,7 +12,7 @@ std::pair<std::string, int> Utils::parse_data(const u_char *beginning_of_section
     std::string data;
     const u_char *current_ptr = beginning_of_section;
     int lenght = 0;
-    
+    int offset = 0;
     // Get lenght of data that is goin to be parsed
     lenght = get_domain_name_length(current_ptr);
 
@@ -20,12 +20,13 @@ std::pair<std::string, int> Utils::parse_data(const u_char *beginning_of_section
     while (*current_ptr != 0)
     {
         // Found reference
-        if (*current_ptr == 0xc0)
+        if ((*current_ptr & 0xC0) == 0xC0)
         {
-            const u_char *offset = current_ptr + 1;
-
-            // Add offset with the beginning of the raw packet
-            current_ptr = packet_start + *offset;
+            // Get the next byte for the offset
+            offset = ((*current_ptr & 0x3F) << 8);
+            current_ptr += 1;
+            offset |= *current_ptr; 
+            current_ptr = packet_start + offset; 
         }
         else // Append the bytes into domain_name
         {

@@ -7,21 +7,26 @@
 ## Obsah
 
 1. [Úvod](#úvod)
-2. [Vstupné argumenty](#Vstupné-argumenty)
-3. [Implementácia](#Implementácia)
+2. [Teória](#Teória)
+3. [Vstupné argumenty](#Vstupné-argumenty)
+4. [Implementácia](#Implementácia)
     - [Štruktúra repozitára](#Štruktúra-repozitára)
     - [Spracovanie vstupných argumentov](#Spracovanie-vstupných-argumentov)
     - [Vytvorenie a spustenie filtru](#Vytvorenie-a-spustenie-filtru)
     - [Výpis zachytených pakiet](#Výpis-zachytených-pakiet)
-4. [Ilustrovaná funkcionalita](#Ilustrovaná-funkcionalita)
-5. [Testovanie](#Testovanie)
-6. [Bibliografia](#Bibliografia)
+5. [Ilustrovaná funkcionalita](#Ilustrovaná-funkcionalita)
+6. [Testovanie](#Testovanie)
+7. [Bibliografia](#Bibliografia)
 
-## Úvod
+## Úvod <a name="úvod"></a>
 
 Táto dokumentácia slúži ako podrobný manuál k projektu `Monitorování DNS komunikace`, ktorý sa zameriava na implementáciu monitorovania DNS komuníkacie. Projekt umožňuje zachytávanie DNS sieťových paketov a ich následujúce spracovanie a písanie na výstup.
 
 Dokumentácia obsahuje technické detaily implementácie, spôsoby použitia aplikácie a jej funkcionalít, ako aj postupy testovania a validácie implementovaných funkcií. Okrem toho sa tu nachádzajú aj informácie o doplnkových funkciách a prípadne zdroje, ktoré boli využité pri vytváraní projektu. Informácie o zadaní projektu viz. <a name="ref1">[1]</a>.
+
+## Teória <a name="Teória"></a>
+
+DNS (Domain Name System) je základným prvkom internetu, ktorý zabezpečuje prevod doménových mien na IP adresy, čím umožňuje efektívnu komunikáciu medzi zariadeniami v sieti. DNS komunikácia prebieha najčastejšie cez protokol UDP, pričom samotné DNS správy obsahujú informácie o dotazoch (query) a odpovediach (response) na zadané doménové mená. DNS správy sa skladajú z niekoľkých sekcií, ktoré obsahujú rôzne informácie potrebné na spracovanie dotazov a odpovedí, tieto sekcie sú Header, Question, Authority a Additional. Pre viacej informácií o týchto sekciách viz. <a name="ref3">[3]</a>.
 
 ## Vstupné argumenty <a name="Vstupné-argumenty"></a>
 
