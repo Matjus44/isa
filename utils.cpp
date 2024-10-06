@@ -40,6 +40,12 @@ std::pair<std::string, int> Utils::parse_data(const u_char *beginning_of_section
             }
         }
     }
+
+    // Add the final dot if it's not there yet
+    if (data.back() != '.')
+    {
+        data.append(".");
+    }
     return std::make_pair(data, lenght);
 }
 
@@ -108,7 +114,8 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
         // If -t argument -> print into file
         if(!parse->translations_file.empty())
         {
-            std::string name_and_addr = name + " " +rdata_stream.str();
+            std::string cleaned_name = remove_trailing_dot(name);
+            std::string name_and_addr = cleaned_name + " " +rdata_stream.str();
             utility_functions.add_string_to_file(parse->translation,name_and_addr);
         }
     }
@@ -131,7 +138,8 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
         // If -t argument -> print into file
         if(!parse->translations_file.empty())
         {
-            std::string name_and_addr = name + " " +rdata_stream.str();
+            std::string cleaned_name = remove_trailing_dot(name);
+            std::string name_and_addr = cleaned_name + " " +rdata_stream.str();
             utility_functions.add_string_to_file(parse->translation,name_and_addr);
         }
     }
@@ -142,11 +150,6 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
         auto domain_name_and_length = parse_data(local_pointer + 2, frame); 
         rdata_stream << domain_name_and_length.first;
 
-        if(rdata_stream.str() == "") // Check for root
-        {
-            rdata_stream << "<root>";
-        }
-
         if(parse->verbose)
         {
             std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type) << " " <<  std::dec << preference << std::hex << " " << rdata_stream.str() << std::endl;
@@ -155,7 +158,7 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
         if(!parse->domains_file.empty())
         {
             // Check whether there is legit name to add into file
-            if(rdata_stream.str() != "<root>")
+            if(rdata_stream.str() != ".")
             {
                 utility_functions.add_string_to_file(file,rdata_stream.str());
             }
@@ -201,15 +204,11 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
         uint32_t expire_limit = ntohl(*(uint32_t *)(local_pointer + 12));
         uint32_t minimum = ntohl(*(uint32_t *)(local_pointer + 16));
 
-        if(name == "") // check for roots
-        {
-            name = "<root>";
-        }
         // If -d argument -> print into file
         if(!parse->domains_file.empty())
         {
              // Check whether there is legit name to add into file
-            if(name != "<root>")
+            if(name != ".")
             {
                 utility_functions.add_string_to_file(file,name);
             }
@@ -299,6 +298,15 @@ std::string Utils::trim(const std::string& str)
     return str.substr(first, (last - first + 1));
 }
 
+std::string Utils::remove_trailing_dot(const std::string& domain) 
+{
+    if (!domain.empty() && domain.back() == '.') 
+    {
+        return domain.substr(0, domain.size() - 1);
+    }
+    return domain;
+}
+
 bool Utils::name_exists_in_file(FILE *file, const std::string &name) 
 {
     char line[500]; // Buffer for storing data
@@ -310,7 +318,8 @@ bool Utils::name_exists_in_file(FILE *file, const std::string &name)
         line[strcspn(line, "\r\n")] = 0;
         std::string fileLine = line;
 
-        if (fileLine == trim(name)) 
+        // Compare trimmed domain name without the trailing dot
+        if (fileLine == trim(remove_trailing_dot(name))) 
         {
             return true; 
         }
@@ -325,6 +334,10 @@ void Utils::add_string_to_file(FILE *file, std::string str)
         std::cerr << "Error: file pointer is null!" << std::endl;
         return;
     }
+
+    // Remove the trailing dot from the domain name
+    str = remove_trailing_dot(str);
+
     // Check if the name is already in the file
     if (!name_exists_in_file(file, str)) 
     {

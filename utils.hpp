@@ -102,6 +102,13 @@ class Utils
         int get_domain_name_length(const u_char *beginning_of_section);
 
         /**
+         * @brief Remove . at the end of name.
+         * 
+         * @param domain String which is goin to be striped off . at the end.
+         * @return Domain name without .
+         */
+        std::string remove_trailing_dot(const std::string& domain); 
+        /**
          * @brief Removes leading and trailing whitespace from a string.
          * 
          * @param str The string to trim.
