@@ -157,12 +157,12 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
         // If -d argument -> print into file
         if(!parse->domains_file.empty())
         {
+            utility_functions.add_string_to_file(file,name);
             // Check whether there is legit name to add into file
             if(rdata_stream.str() != ".")
             {
                 utility_functions.add_string_to_file(file,rdata_stream.str());
             }
-            utility_functions.add_string_to_file(file,name);
         }
         
     }
@@ -180,7 +180,10 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
         if(!parse->domains_file.empty())
         {
             utility_functions.add_string_to_file(file,name);
-            utility_functions.add_string_to_file(file,rdata_stream.str());
+            if(rdata_stream.str() != ".")
+            {
+                utility_functions.add_string_to_file(file,rdata_stream.str());
+            }
         }
     }
     else if(a_type == 6) // SOA
@@ -212,8 +215,14 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
             {
                 utility_functions.add_string_to_file(file,name);
             }
-            utility_functions.add_string_to_file(file,mname);
-            utility_functions.add_string_to_file(file,mname2);
+            if(mname != ".")
+            {
+                utility_functions.add_string_to_file(file,mname);
+            }
+            if(mname2 != ".")
+            {
+                utility_functions.add_string_to_file(file,mname2);
+            }
         }
 
         if(parse->verbose)
@@ -240,7 +249,10 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
         if(!parse->domains_file.empty())
         {
             utility_functions.add_string_to_file(file,name);
-            utility_functions.add_string_to_file(file,target);
+            if(target != ".")
+            {
+                utility_functions.add_string_to_file(file,target);
+            }
         }
 
         if(parse->verbose)
