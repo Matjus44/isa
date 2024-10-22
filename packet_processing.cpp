@@ -23,7 +23,7 @@ void PacketProcessing::print_timestamp(const struct pcap_pkthdr *header, parser 
 
     // Get time in UTC.
     time_t timer = header->ts.tv_sec;
-    struct tm *timeinfo = gmtime(&timer); // Use gmtime to get UTC time
+    struct tm *timeinfo = localtime(&timer); // Use gmtime to get UTC time
     strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
     std::string timestamp = std::string(buffer);
     
