@@ -29,7 +29,7 @@ int parser::parse_arguments(int argc, char *argv[])
         {
             interface = argv[++i];  // Add into atribute
         }
-        else if (arg == "-r" && i + 1 < argc && interface.empty() && pcap.empty())  // PCAP
+        else if (arg == "-p" && i + 1 < argc && interface.empty() && pcap.empty())  // PCAP
         {
             pcap = argv[++i];
         }
@@ -55,7 +55,7 @@ int parser::parse_arguments(int argc, char *argv[])
     // If none of the interface or pcap is in input then exit with and error message
     if (interface.empty() && pcap.empty())
     {
-        std::cerr << "Error: Either interface (-i) or pcap file (-r) must be specified." << std::endl;
+        std::cerr << "Error: Either interface (-i) or pcap file (-p) must be specified." << std::endl;
         return 1;
     }
 
