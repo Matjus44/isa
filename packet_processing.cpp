@@ -12,7 +12,6 @@ void PacketProcessing::parse_packet(u_char *user, const struct pcap_pkthdr *head
     // Cast the user parameter back to a parser object
     parser *parse = reinterpret_cast<parser *>(user);
     print_timestamp(header, parse);
-    print_ip(frame, parse);
     print_information(frame, parse);
 }
 
@@ -33,7 +32,7 @@ void PacketProcessing::print_timestamp(const struct pcap_pkthdr *header, parser 
 
 void PacketProcessing::print_ip(const u_char *frame, parser *parse)
 {
-    const u_char *ip_frame = frame + 14; 
+    const u_char *ip_frame = frame; 
 
     char src_ip[INET6_ADDRSTRLEN] = {0};
     char dst_ip[INET6_ADDRSTRLEN] = {0};
@@ -67,40 +66,63 @@ void PacketProcessing::print_ip(const u_char *frame, parser *parse)
 
 void PacketProcessing::process_ipv4_port(const u_char *frame)
 {
-    auto ip4 = reinterpret_cast<const struct ip *>(frame + sizeof(struct ether_header));
-    const struct udphdr *udp_header = reinterpret_cast<const struct udphdr *>(frame + sizeof(struct ether_header) + (ip4->ip_hl * 4));
+    auto ip4 = reinterpret_cast<const struct ip *>(frame);
+    const struct udphdr *udp_header = reinterpret_cast<const struct udphdr *>(frame + (ip4->ip_hl * 4));
     std::cout << "SrcPort: UDP/" << ntohs(udp_header->uh_sport) << std::endl;
     std::cout << "DstPort: UDP/" << ntohs(udp_header->uh_dport) << std::endl;
-    
 }
 
 void PacketProcessing::process_ipv6_port(const u_char *frame)
 {
-    const struct udphdr *udp_header = reinterpret_cast<const struct udphdr *>(frame + sizeof(struct ether_header) + sizeof(struct ip6_hdr));
+    const struct udphdr *udp_header = reinterpret_cast<const struct udphdr *>(frame + sizeof(struct ip6_hdr));
     std::cout << "SrcPort: UDP/" << ntohs(udp_header->uh_sport) << std::endl;
     std::cout << "DstPort: UDP/" << ntohs(udp_header->uh_dport) << std::endl;
-    
 }
 
 void PacketProcessing::print_information(const u_char *frame, parser *parse)
 {
-    const struct ether_header *eth_header = reinterpret_cast<const struct ether_header *>(frame);
-    // Get the Ethernet type.
-    auto ether_type = ntohs(eth_header->ether_type);
+    uint16_t ether_type;
+    const u_char *new_frame = nullptr;
 
-    // Check the Ethernet type and print corresponding information, ports are being printed only in -v mode.
-    if (ether_type == ETHERTYPE_IP && parse->verbose == true)
+    // Check if the packet is Linux Cooked
+    if (ntohs(*(uint16_t*)frame) == 0x0003) 
     {
-        process_ipv4_port(frame);
+        // Skip 16 bytes
+        const u_char *sll_header = frame;
+        const u_char *sll_payload = frame + 16;
+        // Get type
+        ether_type = ntohs(*(uint16_t *)(sll_header + 14));
+        new_frame = sll_payload; // New pointer for frame
     }
-    else if (ether_type == ETHERTYPE_IPV6 && parse->verbose == true)
+    else
     {
-        process_ipv6_port(frame);
+        // Otherwise, handle the frame as a standard Ethernet frame
+        const struct ether_header *eth_header = reinterpret_cast<const struct ether_header *>(frame);
+        ether_type = ntohs(eth_header->ether_type);
+        new_frame = frame + 14; // Skip the Ethernet header for further processing
     }
 
-    // Print and parse rest of DNS information.
-    auto result = print_identifier_and_flags(frame, ether_type, parse);
-    print_dns_information(frame,result.first,parse,result.second);
+    print_ip(new_frame, parse);
+
+    // Now handle the packet based on the EtherType (IPv4, IPv6, etc.)
+    if (ether_type == ETHERTYPE_IP)
+    {
+        if (parse->verbose)
+        {
+            process_ipv4_port(new_frame); // Handle IPv4 packet
+        }
+    }
+    else if (ether_type == ETHERTYPE_IPV6)
+    {
+        if (parse->verbose)
+        {
+            process_ipv6_port(new_frame); // Handle IPv6 packet
+        }
+    }
+
+    // Continue processing DNS information
+    auto result = print_identifier_and_flags(new_frame, ether_type, parse);
+    print_dns_information(new_frame, result.first, parse, result.second);
 }
 
 std::pair<const u_char*, uint8_t> PacketProcessing::print_identifier_and_flags(const u_char *frame, uint16_t type, parser *parse)
@@ -108,7 +130,7 @@ std::pair<const u_char*, uint8_t> PacketProcessing::print_identifier_and_flags(c
     const u_char *dns_header;
 
     // Skip the Ethernet header. 
-    const u_char *ip_frame = frame + 14;
+    const u_char *ip_frame = frame;
 
     if (type == ETHERTYPE_IP)
     {
