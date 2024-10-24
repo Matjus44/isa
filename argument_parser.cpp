@@ -11,7 +11,7 @@ int parser::parse_arguments(int argc, char *argv[])
 {
     if (argc == 2 && std::string(argv[1]) == "-help")
     {
-        std::cout << "./dns-monitor (-i <interface> | -r <pcapfile>) [-v] [-d <domainsfile>] [-t <translationsfile>]\n";
+        std::cout << "./dns-monitor (-i <interface> | -p <pcapfile>) [-v] [-d <domainsfile>] [-t <translationsfile>]\n";
         std::cout << "Parametry:\n";
         std::cout << "-i <interface> - název rozhraní, na kterém bude program naslouchat, nebo\n";
         std::cout << "-p <pcapfile> - název souboru PCAP, který program zpracuje;\n";
