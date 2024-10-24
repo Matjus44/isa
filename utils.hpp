@@ -25,13 +25,13 @@ class Utils
 {
     public:
         /**
-         * @brief Signal handler for SIGINT (Ctrl+C).
+         * @brief Signal handler.
          * @param pid The process ID or signal number received.
          */
         static void sigint_handle(int pid);
 
         /**
-         * @brief Signal handler for SIGSEGV (Segmentation Fault).
+         * @brief Signal handler for SIGSEGV.
          * This function is called when the program encounters a segmentation fault.
          * @param sig The signal number.
          */
