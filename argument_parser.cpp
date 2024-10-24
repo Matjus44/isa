@@ -14,7 +14,7 @@ int parser::parse_arguments(int argc, char *argv[])
         std::cout << "./dns-monitor (-i <interface> | -r <pcapfile>) [-v] [-d <domainsfile>] [-t <translationsfile>]\n";
         std::cout << "Parametry:\n";
         std::cout << "-i <interface> - název rozhraní, na kterém bude program naslouchat, nebo\n";
-        std::cout << "-r <pcapfile> - název souboru PCAP, který program zpracuje;\n";
+        std::cout << "-p <pcapfile> - název souboru PCAP, který program zpracuje;\n";
         std::cout << "-v - režim \"verbose\": kompletní výpis detailů o zprávách DNS;\n";
         std::cout << "-d <domainsfile> - název souboru s doménovými jmény;\n";
         std::cout << "-t <translationsfile> - název souboru s překladem doménových jmen na IP.\n";
