@@ -10,7 +10,7 @@
 
 int main(int argc, char* argv[]) 
 {
-    // Structure for ctrl+c
+    // Structure for signals
     signal(SIGINT, Utils::sigint_handle);
     signal(SIGQUIT, Utils::sigint_handle);
     signal(SIGTERM, Utils::sigint_handle);
