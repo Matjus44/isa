@@ -12,6 +12,8 @@ int main(int argc, char* argv[])
 {
     // Structure for ctrl+c
     signal(SIGINT, Utils::sigint_handle);
+    signal(SIGQUIT, Utils::sigint_handle);
+    signal(SIGTERM, Utils::sigint_handle);
 
     // Set up signal handler for SIGSEGV
     struct sigaction sa;
