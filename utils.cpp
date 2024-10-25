@@ -158,11 +158,6 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
         if(!parse->domains_file.empty())
         {
             utility_functions.add_string_to_file(file,name);
-            // Check whether there is legit name to add into file
-            if(rdata_stream.str() != ".")
-            {
-                utility_functions.add_string_to_file(file,rdata_stream.str());
-            }
         }
         
     }
