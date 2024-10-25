@@ -26,19 +26,6 @@ class Utils
 {
     public:
         /**
-         * @brief Signal handler.
-         * @param pid The process ID or signal number received.
-         */
-        static void sigint_handle(int pid);
-
-        /**
-         * @brief Signal handler for SIGSEGV.
-         * This function is called when the program encounters a segmentation fault.
-         * @param sig The signal number.
-         */
-        static void segfault_handle(int sig);
-
-        /**
          * @brief Retrieves the class type as a string based on the DNS query class.
          * @param q_class The query class as a 16-bit unsigned integer.
          * @return A string representing the class type (e.g., "IN" for Internet).

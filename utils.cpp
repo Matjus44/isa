@@ -358,18 +358,3 @@ void Utils::add_string_to_file(FILE *file, std::string str)
         fflush(file); // Ensure the name is written to the file immediately
     }
 }
-
-// Function for capturing ctrl+c
-void Utils::sigint_handle(int pid)
-{
-    (void)pid;
-    exit(0);
-}
-
-// Function to handle segmentation fault
-void Utils::segfault_handle(int sig)
-{
-    (void)sig;
-    std::cerr << "Unexpected error occured" << std::endl;
-    exit(EXIT_FAILURE);
-}

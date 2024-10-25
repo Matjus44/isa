@@ -7,6 +7,9 @@
 
 #include "packet_capturing.hpp"
 
+pcap_t* Sniffer::hanlder_for_dealoc = nullptr;
+struct bpf_program* Sniffer::bpf_prog_for_dealoc = nullptr;
+
 static char errbuf[PCAP_ERRBUF_SIZE];
 
 void Sniffer::run_sniffer(parser &parser)
@@ -79,6 +82,7 @@ void Sniffer::build_filter(parser &parser, pcap_t *handle)
     if (pcap_setfilter(handle, &bpf_prog) == PCAP_ERROR)
     {
         std::cerr << "Error: Setting filter: " << pcap_geterr(handle) << std::endl;
+        bpf_prog_for_dealoc = &bpf_prog;
         pcap_freecode(&bpf_prog); // Free the filter code if an error occurs
         exit(EXIT_FAILURE);
     }
@@ -90,6 +94,7 @@ void Sniffer::build_filter(parser &parser, pcap_t *handle)
 
 void Sniffer::capture_packets(parser &parser , pcap_t *handle)
 {
+    hanlder_for_dealoc = handle;
     if (pcap_loop(handle, 0 , PacketProcessing::parse_packet, reinterpret_cast<u_char*>(&parser)) < 0) // Loop for capturing packets
     {
         std::cerr << "Error: Issue while capturing packets: " << pcap_geterr(handle) << std::endl;

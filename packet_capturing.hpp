@@ -19,6 +19,9 @@
 class Sniffer
 {  
     public:
+
+        static pcap_t* hanlder_for_dealoc;
+        static struct bpf_program* bpf_prog_for_dealoc;
         /**
          * @brief Starts live packet sniffing.
          * 

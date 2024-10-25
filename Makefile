@@ -4,7 +4,7 @@ CXXFLAGS = -Wall -Wextra -Werror -pedantic -std=c++20
 LDFLAGS = -lpcap
 
 # Define all cpp files as sources
-SOURCES = main.cpp argument_parser.cpp packet_capturing.cpp packet_processing.cpp utils.cpp
+SOURCES = main.cpp argument_parser.cpp packet_capturing.cpp packet_processing.cpp utils.cpp terminators.cpp
 # Define all object files based on sources
 OBJECTS = $(SOURCES:.cpp=.o)
 # Define the executable file name

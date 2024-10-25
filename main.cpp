@@ -7,17 +7,18 @@
 
 #include "argument_parser.hpp"
 #include "packet_capturing.hpp"
+#include "terminators.hpp"
 
 int main(int argc, char* argv[]) 
 {
     // Structure for signals
-    signal(SIGINT, Utils::sigint_handle);
-    signal(SIGQUIT, Utils::sigint_handle);
-    signal(SIGTERM, Utils::sigint_handle);
+    signal(SIGINT, Terminators::sigint_handle);
+    signal(SIGQUIT, Terminators::sigint_handle);
+    signal(SIGTERM, Terminators::sigint_handle);
 
     // Set up signal handler for SIGSEGV
     struct sigaction sa;
-    sa.sa_handler = Utils::segfault_handle;
+    sa.sa_handler = Terminators::segfault_handle;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
     sigaction(SIGSEGV, &sa, nullptr);
