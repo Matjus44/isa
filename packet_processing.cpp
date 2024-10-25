@@ -120,7 +120,7 @@ void PacketProcessing::print_information(const u_char *frame, parser *parse)
 
     // Continue processing DNS information
     auto result = print_identifier_and_flags(new_frame, ether_type, parse);
-    print_dns_information(new_frame, result.first, parse, result.second);
+    print_dns_information(frame, result.first, parse, result.second);
 }
 
 std::pair<const u_char*, uint8_t> PacketProcessing::print_identifier_and_flags(const u_char *frame, uint16_t type, parser *parse)
