@@ -22,6 +22,7 @@
 #include <netinet/ip6.h>
 #include <time.h>
 #include <pcap.h>
+#include <sys/socket.h>
 
 /**
  * @class PacketProcessing
