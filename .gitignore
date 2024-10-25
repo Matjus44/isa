@@ -3,7 +3,6 @@
 
 ipk-sniffer
 
-test_files
 .vscode
 /env
 dns-monitor
