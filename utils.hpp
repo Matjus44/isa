@@ -16,6 +16,7 @@
 #include <arpa/inet.h>
 #include <iomanip>
 #include "argument_parser.hpp"
+#include <sys/socket.h> // Pridané pre definíciu AF_INET a AF_INET6
 
 /**
  * @class Utils
