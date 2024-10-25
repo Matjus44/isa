@@ -219,10 +219,6 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
             {
                 utility_functions.add_string_to_file(file,mname);
             }
-            if(mname2 != ".")
-            {
-                utility_functions.add_string_to_file(file,mname2);
-            }
         }
 
         if(parse->verbose)
