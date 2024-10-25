@@ -44,7 +44,7 @@ pcap_t* Sniffer::init_sniffer(parser &parser)
         exit(EXIT_FAILURE);
     }
     // Check whether its supported.
-    if (pcap_datalink(handle) != DLT_EN10MB)
+    if (pcap_datalink(handle) != DLT_EN10MB && pcap_datalink(handle) != DLT_LINUX_SLL)
     {
         std::cerr << "Error: Ethernet not supported on specified interface" << std::endl;
         exit(EXIT_FAILURE);

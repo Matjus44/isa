@@ -23,6 +23,7 @@
 #include <netinet/ip_icmp.h>
 #include <time.h>
 #include <pcap.h>
+#include "packet_capturing.hpp"
 
 /**
  * @class PacketProcessing

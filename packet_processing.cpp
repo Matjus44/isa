@@ -85,14 +85,12 @@ void PacketProcessing::print_information(const u_char *frame, parser *parse)
     const u_char *new_frame = nullptr;
 
     // Check if the packet is Linux Cooked
-    if (ntohs(*(uint16_t*)frame) == 0x0003) 
+    if (pcap_datalink(Sniffer::hanlder_for_dealoc) == DLT_LINUX_SLL) 
     {
         // Skip 16 bytes
         const u_char *sll_header = frame;
-        const u_char *sll_payload = frame + 16;
-        // Get type
         ether_type = ntohs(*(uint16_t *)(sll_header + 14));
-        new_frame = sll_payload; // New pointer for frame
+        new_frame = frame + 16;; // New pointer for frame
     }
     else
     {
