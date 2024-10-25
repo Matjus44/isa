@@ -13,16 +13,16 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#include <sys/socket.h>       // Pridané pre definíciu sockaddr
 #include <arpa/inet.h>
-#include <netinet/if_ether.h>
+#include <netinet/in.h>
 #include <netinet/ip.h>
+#include <netinet/ip6.h>
+#include <netinet/if_ether.h>
 #include <netinet/udp.h>
 #include <netinet/ip_icmp.h>
-#include <netinet/in.h>
-#include <netinet/ip6.h>
 #include <time.h>
 #include <pcap.h>
-#include <netinet/if_arp.h>
 
 /**
  * @class PacketProcessing
