@@ -13,7 +13,7 @@
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-#include <sys/socket.h>       // Pridané pre definíciu sockaddr
+#include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
