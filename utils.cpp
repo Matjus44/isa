@@ -78,12 +78,6 @@ std::string Utils::get_class_type(uint16_t q_class)
     {
         case 1:
             return "IN";       // Internet
-        case 3:
-            return "CH";       // Chaosnet
-        case 4:
-            return "HS";       // Hesiod
-        case 255:
-            return "ANY";      // Wildcard
         default:
             return "Unknown";
     }

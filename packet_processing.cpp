@@ -224,7 +224,7 @@ const u_char * PacketProcessing::print_question_sections(const u_char *question_
         std::string class_str = utility_functions.get_class_type(q_class);
 
         // Print if the record has allowed type and -v argument is passed.
-        if(parse->verbose && utility_functions.get_record_type(q_type) != "Unknown")
+        if(parse->verbose && utility_functions.get_record_type(q_type) != "Unknown" && utility_functions.get_class_type(q_class) != "Unknown")
         {
             if(first_loop == false)
             {
@@ -235,10 +235,13 @@ const u_char * PacketProcessing::print_question_sections(const u_char *question_
             std::cout << result.first << " " << class_str << " " << type_str << std::endl;
         }   
 
-        // Etract information into domains file.
-        if(!parse->domains_file.empty())
+        if(utility_functions.get_record_type(q_type) != "Unknown" && utility_functions.get_class_type(q_class) != "Unknown")
         {
-            utility_functions.add_string_to_file(parse->domain,result.first);
+            // Etract information into domains file.
+            if(!parse->domains_file.empty())
+            {
+                utility_functions.add_string_to_file(parse->domain,result.first);
+            }
         }
 
         // Move pointer and lower count.
