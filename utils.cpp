@@ -146,7 +146,7 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
 
         if(parse->verbose)
         {
-            std::cout << name << " " << std::to_string(a_ttl) << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type) << " " <<  std::dec << preference << std::hex << " " << rdata_stream.str() << std::endl;
+            std::cout << name << " " << std::to_string(a_ttl) << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type) << " " <<  std::to_string(preference) << " " << rdata_stream.str() << std::endl;
         }
         // If -d argument -> print into file
         if(!parse->domains_file.empty())
@@ -213,7 +213,7 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
         if(parse->verbose)
         {
             std::cout << name << " " << std::to_string(a_ttl) << " IN " << utility_functions.get_record_type(a_type) << " " << mname << " " << mname2
-            << " " << serial_number << " " << refresh_interval << " " << retry_interval << " " << expire_limit << " " << minimum << std::endl;
+            << " " << std::to_string(serial_number) << " " << std::to_string(refresh_interval) << " " << std::to_string(retry_interval) << " " << std::to_string(expire_limit) << " " << std::to_string(minimum) << std::endl;
         }
     }
     else if (a_type == 33)  // SRV
@@ -243,9 +243,9 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
             std::cout << name << " " << std::to_string(a_ttl) << " " 
                     << utility_functions.get_record_type(a_type) << " " 
                     << utility_functions.get_class_type(a_class) << " " 
-                    << priority << " " 
-                    << weight << " " 
-                    << port << " " 
+                    << std::to_string(priority) << " " 
+                    << std::to_string(weight) << " " 
+                    << std::to_string(port) << " " 
                     << target << std::endl;
         }
     }
