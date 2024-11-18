@@ -9,6 +9,9 @@
 #include "packet_capturing.hpp"
 #include "terminators.hpp"
 
+// Global parser pointer for cleanup
+parser* global_parser = nullptr;
+
 int main(int argc, char* argv[]) 
 {
     // Structure for signals
@@ -23,6 +26,7 @@ int main(int argc, char* argv[])
     sa.sa_flags = 0;
     sigaction(SIGSEGV, &sa, nullptr);
     parser parse;
+    global_parser = &parse; // Assign parser instance to global pointer
     int result = parse.parse_arguments(argc,argv);
     if(result != 0)
     {

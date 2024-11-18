@@ -7,6 +7,9 @@
 
 #include "terminators.hpp"
 
+// Global parser pointer for cleanup
+extern parser* global_parser;
+
 // Function for capturing terminators
 void Terminators::sigint_handle(int pid)
 {
@@ -28,6 +31,22 @@ void Terminators::sigint_handle(int pid)
         pcap_close(Sniffer::hanlder_for_dealoc);
         Sniffer::hanlder_for_dealoc = nullptr;
     }
+
+     // Close any open files in the global parser
+    if (global_parser != nullptr) 
+    {
+        if (global_parser->domain) 
+        {
+            fclose(global_parser->domain);
+            global_parser->domain = nullptr;
+        }
+        if (global_parser->translation) 
+        {
+            fclose(global_parser->translation);
+            global_parser->translation = nullptr;
+        }
+    }
+
     exit(0);
 }
 
@@ -52,6 +71,22 @@ void Terminators::segfault_handle(int sig)
         pcap_close(Sniffer::hanlder_for_dealoc);
         Sniffer::hanlder_for_dealoc = nullptr;
     }
+
+    // Close any open files in the global parser
+    if (global_parser != nullptr) 
+    {
+        if (global_parser->domain) 
+        {
+            fclose(global_parser->domain);
+            global_parser->domain = nullptr;
+        }
+        if (global_parser->translation) 
+        {
+            fclose(global_parser->translation);
+            global_parser->translation = nullptr;
+        }
+    }
+    
     std::cerr << "Unexpected error occured" << std::endl;
     exit(EXIT_FAILURE);
 }

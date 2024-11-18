@@ -9,6 +9,7 @@
 #define TERMINATORS_HPP
 
 #include "packet_capturing.hpp"
+#include "argument_parser.hpp"
 
 /**
  * @class Terminators
