@@ -20,6 +20,9 @@ class Sniffer
 {  
     public:
 
+        /**
+         * @brief Static atributes used for deallocing in terminators method in case of some terminator signal.
+         */
         static pcap_t* hanlder_for_dealoc;
         static struct bpf_program* bpf_prog_for_dealoc;
         /**
