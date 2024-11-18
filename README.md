@@ -123,7 +123,7 @@ void Sniffer::build_filter(parser &parser, pcap_t *handle)
 }
 ```
 
-**Parsovanie dát ako napríklad name, adress**
+**Parsovanie dát ako napríklad domain name**
 
 ```
 std::pair<std::string, int> Utils::parse_data(const u_char *beginning_of_section, const u_char *packet_start)
