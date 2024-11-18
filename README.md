@@ -6,7 +6,7 @@
 
 ## Popis programu
 
-Tento program sa zameriava na monitoring DNS komunikácie, kde sa spracúvajú pakety ktoré majú podporované recordy a triedy ktoré sú následne vypísané do terminálu. V prípade že trieda alebo record nie je podporavný tak sa tento záznam preskočí a jeho informácie sa nikde neukladajú. Program končí vypísaním všetkých pakiet alebo pomocou signal terminátorov v prípade živého zachytávania paketov. Pri živom vysielaní sa počúva na rozrahní *eth0* ale je možnosť aj na interface *any*. Výpis jednotlivých pakiet je v súlade s referenciami v zadaní. Program využíva Makefile na preklad kódu.
+Tento program sa zameriava na monitoring DNS komunikácie, kde sa spracúvajú pakety ktoré majú podporované recordy a triedy ktoré sú následne vypísané do terminálu. V prípade že trieda alebo record nie je podporavný tak sa tento záznam preskočí a jeho informácie sa nikde neukladajú. V prípade že daná sekcia nemá žiadny platný záznam, tak sa nevypíše ani label označujúci túto sekciu. Program končí vypísaním všetkých pakiet alebo pomocou signal terminátorov v prípade živého zachytávania paketov. Pri živom vysielaní sa počúva na rozrahní *eth0* ale je možnosť aj na interface *any*. Výpis jednotlivých pakiet je v súlade s referenciami v zadaní. Program využíva Makefile na preklad kódu.
 
 ### Funkcionalita:
 - Zachytávanie DNS paketov v reálnom čase podľa špecifikácie interface alebo pomocou vstupných pcap súborov.
