@@ -1,7 +1,7 @@
 /*
  * Program: DNS monitor
  * Description: Implementation of methods for Parse class.
- * Author: Matúš Janek
+ * Author: Matúš Janek (237464)
  * Date: 26.09.2024
  */
 

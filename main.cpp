@@ -1,7 +1,7 @@
 /*
  * Program: DNS monitor
  * Description: main.cpp
- * Author: Matúš Janek
+ * Author: Matúš Janek (237464)
  * Date: 26.09.2024
  */
 

@@ -1,7 +1,7 @@
 /*
  * Program: DNS monitor
  * Description: Header file for packet_capturing.cpp
- * Author: Matúš Janek
+ * Author: Matúš Janek (237464)
  * Date: 26.09.2024
  */
 
