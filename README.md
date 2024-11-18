@@ -26,7 +26,7 @@ Dokumentácia obsahuje technické detaily implementácie, spôsoby použitia apl
 
 ## Teória <a name="Teória"></a>
 
-DNS (Domain Name System) je základným prvkom internetu, ktorý zabezpečuje prevod doménových mien na IP adresy, čím umožňuje efektívnu komunikáciu medzi zariadeniami v sieti. DNS komunikácia prebieha najčastejšie cez protokol UDP, pričom samotné DNS správy obsahujú informácie o dotazoch (query) a odpovediach (response) na zadané doménové mená. DNS správy sa skladajú z niekoľkých sekcií, ktoré obsahujú rôzne informácie potrebné na spracovanie dotazov a odpovedí, tieto sekcie sú Header, Question, Authority a Additional. Pre viacej informácií o týchto sekciách viz. <a name="ref3">[3]</a>.
+DNS je jedným z základných kameňov internetu, ktorý umožňuje prevod doménových mien na IP adresy a tým aj efektívnu komunikáciu medzi zariadeniami v sieti. DNS komunikácia prebieha najčastejšie cez protokol UDP, pričom samotné DNS správy obsahujú informácie o dotazoch (query) a odpovediach (response) na zadané doménové mená. DNS správy sa skladajú z niekoľkých sekcií, ktoré obsahujú rôzne informácie potrebné na spracovanie dotazov a odpovedí, tieto sekcie sú Header, Question, Authority a Additional. Pre viacej informácií o týchto sekciách viz. <a name="ref3">[3]</a>.
 
 ## Vstupné argumenty <a name="Vstupné-argumenty"></a>
 
@@ -71,9 +71,11 @@ pomocou funkcií `print_question_sections` a `print_other_sections`. Každá pak
 
 #### Spracovanie DNS otázok
 Funkcia `print_question_sections` spracováva DNS otázky, kde vypíše doménové meno, typ záznamu a triedu záznamu, ak je povolený `verbose` mód. Funkcia taktiež pridáva doménové mená do súboru, ak je to nastavené pomocou parametra `domains_file`, pre parsovanie mena sa volá funkcia `parse_data`.
+V prípade zadania parametru -d sú doménové mená vypísané do výstupného súboru ktorého názov je špecifikovaný pri spustení. V prípade zadania -t parametru pri spustení sú doménové mená a ich preklady vypisované do výstupného súboru ktorý obsahuje preklady doménových mien na ip adresy.
 
 #### Spracovanie ďalších sekcií
-Funkcia `print_other_sections` spracováva záznamy v sekciách `Answer`, `Authority`, a `Additional`. Pre každý záznam vypíše meno, typ záznamu, triedu, TTL a ďalšie detaily. Pomocou funkcie `parse_rdata_and_print` sa následne spracuje obsah záznamov, čo zahŕňa rôzne typy DNS záznamov, ako napríklad A, AAAA, NS, MX a iné.
+Funkcia `print_other_sections` spracováva záznamy v sekciách `Answer`, `Authority`, a `Additional`. Pre každý záznam vypíše meno, typ záznamu, triedu, TTL a ďalšie detaily. Pomocou funkcie `parse_rdata_and_print` sa následne spracuje obsah záznamov, čo zahŕňa rôzne typy DNS záznamov, ako napríklad A, AAAA, NS, MX a iné. V prípade zadania parametru -d sú doménové mená vypísané do výstupného súboru ktorého názov je špecifikovaný pri spustení. V prípade zadania -t parametru pri spustení sú doménové mená a ich preklady vypisované do výstupného súboru ktorý obsahuje preklady doménových mien na ip adresy.
+
 
 ***Funkcie su bližie definované v hlavičkových súboroch.***
 
@@ -129,7 +131,7 @@ std::pair<std::string, int> Utils::parse_data(const u_char *beginning_of_section
     std::string data;
     const u_char *current_ptr = beginning_of_section;
     int lenght = 0;
-    
+    int offset = 0;
     // Get lenght of data that is goin to be parsed
     lenght = get_domain_name_length(current_ptr);
 
@@ -137,12 +139,13 @@ std::pair<std::string, int> Utils::parse_data(const u_char *beginning_of_section
     while (*current_ptr != 0)
     {
         // Found reference
-        if (*current_ptr == 0xc0)
+        if ((*current_ptr & 0xC0) == 0xC0)
         {
-            const u_char *offset = current_ptr + 1;
-
-            // Add offset with the beginning of the raw packet
-            current_ptr = packet_start + *offset;
+            // Get the next byte for the offset
+            offset = ((*current_ptr & 0x3F) << 8);
+            current_ptr += 1;
+            offset |= *current_ptr; 
+            current_ptr = packet_start + offset; 
         }
         else // Append the bytes into domain_name
         {
@@ -156,6 +159,12 @@ std::pair<std::string, int> Utils::parse_data(const u_char *beginning_of_section
             }
         }
     }
+
+    // Add the final dot if it's not there yet
+    if (data.back() != '.')
+    {
+        data.append(".");
+    }
     return std::make_pair(data, lenght);
 }
 ```
@@ -167,13 +176,38 @@ std::pair<std::string, int> Utils::parse_data(const u_char *beginning_of_section
 
 *Program bol úspešne testovaný pomocou vstupných .pcap súborov a ich následovné porovnávanie v aplikácii wireshark.*
 
-### Record type AAAA (Answer section) 
+### Record type A (Question section) 
+
+```
+2024-09-20 12:03:45 SrcIP: 2001:930:107:86a3:7c20:b664:8a1b:f323 -> DstIP: 2001:4860:4860::8888 (Q 1/0/0/0)
+```
 
 #### `verbous`
+
+```
+Timestamp: 2024-09-20 12:03:45
+SrcIP: 2001:930:107:86a3:7c20:b664:8a1b:f323
+DstIP: 2001:4860:4860::8888
+SrcPort: UDP/52561
+DstPort: UDP/53
+Identifier: 0xbe0b
+Flags: QR=0, OPCODE=0, AA=0, TC=0, RD=1, RA=0, AD=0, CD=0, RCODE=0
+
+[Question Section]
+instagram.fist2-4.fna.fbcdn.net. IN A
+=====================================
+```
+
+![Alt text](pictures/1.png "Optional title")
+
+### AAAA (Question and Answer section) 
+
 ```
 2024-09-20 13:34:53 SrcIP: 2001:4860:4860::8888 -> DstIP: 2001:930:107:86a3:7c20:b664:8a1b:f323 (R 1/1/0/0)
 ```
-#### bez `verbous` argumentu
+
+#### `verbous`
+
 ```
 Timestamp: 2024-09-20 13:34:53
 SrcIP: 2001:4860:4860::8888
@@ -184,38 +218,22 @@ Identifier: 0x4be4
 Flags: QR=1, OPCODE=0, AA=0, TC=0, RD=1, RA=1, AD=0, CD=0, RCODE=0
 
 [Question Section]
-accounts.google.com IN AAAA
+accounts.google.com. IN AAAA
 
 [Answer Section]
-accounts.google.com 20 IN AAAA 2a00:1450:4013:c14::54
+accounts.google.com. 20 IN AAAA 2a00:1450:4013:c14::54
 =====================================
 ```
 
-![Alt text](pictures/AnswerAAAA.png "Optional title")
+![Alt text](pictures/2.png "Optional title")
 
-### Record type A (Answer section) 
+### SOA (Authority section) A (Question section)
 
 ```
-Timestamp: 2024-09-20 12:03:46
-SrcIP: 2001:4860:4860::8888
-DstIP: 2001:930:107:86a3:7c20:b664:8a1b:f323
-SrcPort: UDP/53
-DstPort: UDP/62098
-Identifier: 0x3ffe
-Flags: QR=1, OPCODE=0, AA=0, TC=0, RD=1, RA=1, AD=0, CD=0, RCODE=0
-
-[Question Section]
-occ-0-4609-778.1.nflxso.net IN A
-
-[Answer Section]
-occ-0-4609-778.1.nflxso.net 10 IN A 195.22.197.119
-occ-0-4609-778.1.nflxso.net 10 IN A 195.22.197.129
-=====================================
+2024-09-20 12:04:33 SrcIP: 2001:4860:4860::8888 -> DstIP: 2001:930:107:86a3:7c20:b664:8a1b:f323 (R 1/0/1/0)
 ```
 
-![Alt text](pictures/AnswerA.png "Optional title")
-
-### Record type SOA (Authority section)
+#### `verbous`
 
 ```
 Timestamp: 2024-09-20 12:04:33
@@ -227,22 +245,22 @@ Identifier: 0x4256
 Flags: QR=1, OPCODE=0, AA=0, TC=0, RD=1, RA=1, AD=0, CD=0, RCODE=3
 
 [Question Section]
-wpad.hgw.local IN A
+wpad.hgw.local. IN A
 
 [Authority Section]
-<root> 86399 IN SOA a.root-servers.net nstld.verisign-grs.com (
-    2024092000 ; Serial
-    1800 ; Refresh
-    900 ; Retry
-    604800 ; Expire
-    86400 ; Minimum TTL
-)
+. 86399 IN SOA a.root-servers.net. nstld.verisign-grs.com. 2024092000 1800 900 604800 86400
 =====================================
 ```
 
-![Alt text](pictures/AuthoritySOA.png "Optional title")
+![Alt text](pictures/4.png "Optional title")
 
-### Record type NS (Authority section), Record type A, AAAA (Additional section)
+### NS (Authority section), A, AAAA (Additional, Answer, Question section)
+
+```
+2024-09-25 11:55:31 SrcIP: 147.229.191.143 -> DstIP: 147.229.193.87 (R 1/1/2/4)
+```
+
+#### `verbous`
 
 ```
 Timestamp: 2024-09-25 11:55:31
@@ -254,25 +272,31 @@ Identifier: 0xb4e1
 Flags: QR=1, OPCODE=0, AA=0, TC=0, RD=1, RA=1, AD=0, CD=0, RCODE=0
 
 [Question Section]
-www.vut.cz IN A
+www.vut.cz. IN A
 
 [Answer Section]
-www.vut.cz 68 IN A 147.229.2.90
+www.vut.cz. 68 IN A 147.229.2.90
 
 [Authority Section]
-vut.cz 68 IN NS rhino.cis.vutbr.cz
-vut.cz 68 IN NS pipit.cis.vutbr.cz
+vut.cz. 68 IN NS rhino.cis.vutbr.cz.
+vut.cz. 68 IN NS pipit.cis.vutbr.cz.
 
 [Additional Section]
-pipit.cis.vutbr.cz 283 IN A 77.93.219.110
-pipit.cis.vutbr.cz 283 IN AAAA 2a01:430:120::4d5d:db6e
-rhino.cis.vutbr.cz 68 IN A 147.229.3.10
-rhino.cis.vutbr.cz 68 IN AAAA 2001:67c:1220:e000::93e5:30a
+pipit.cis.vutbr.cz. 283 IN A 77.93.219.110
+pipit.cis.vutbr.cz. 283 IN AAAA 2a01:430:120::4d5d:db6e
+rhino.cis.vutbr.cz. 68 IN A 147.229.3.10
+rhino.cis.vutbr.cz. 68 IN AAAA 2001:67c:1220:e000::93e5:30a
 =====================================
 ```
-![Alt text](pictures/AuthorityNS.png "Optional title")
+![Alt text](pictures/3.png "Optional title")
 
-### Record type MX (Answer section section), record type A, AAAA (Additional section), record type NS (Answer section)
+### MX (Answer and Question section), A, AAAA (Additional section), NS (Authority section)
+
+```
+2024-09-25 12:39:10 SrcIP: 147.229.191.143 -> DstIP: 147.229.193.87 (R 1/1/2/5)
+```
+
+#### `verbous`
 
 ```
 Timestamp: 2024-09-25 12:39:10
@@ -301,7 +325,7 @@ b.iana-servers.net 60 IN AAAA 2001:500:8d::53
 =====================================
 ```
 
-![Alt text](pictures/AnswerMX.png "Optional title")
+![Alt text](pictures/5.png "Optional title")
 
 ## Bibliografia <a name="Bibliografia"></a>
 
