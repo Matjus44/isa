@@ -15,8 +15,9 @@
     - [Vytvorenie a spustenie filtru](#Vytvorenie-a-spustenie-filtru)
     - [Výpis zachytených pakiet](#Výpis-zachytených-pakiet)
 5. [Ilustrovaná funkcionalita](#Ilustrovaná-funkcionalita)
-6. [Testovanie](#Testovanie)
-7. [Bibliografia](#Bibliografia)
+6. [UML](#Uml)
+7. [Testovanie](#Testovanie)
+8. [Bibliografia](#Bibliografia)
 
 ## Úvod <a name="úvod"></a>
 
@@ -42,7 +43,7 @@ Tento program taktiež podporuje `-help` ktorý vypíše nápovedu, tento argume
 
 ### Štruktúra repozitára <a name="Štruktúra-repozitára"></a>
 
-Tento program obsahuje súbory `argument_parser.cpp/hpp` v ktorej je implementovaná trieda `Parser`  ktorá obsahuje atribúty zodpovedajúce jednotlivých vstupných argumentom a metódy a ich spracovanie. `packet_capturing.cpp/hpp` obsahuje triedu `Sniffer` ktorá obsahuje metódy na vytvorenie filtra. Súbory `packet_processing.cpp/hpp` obsahuje triedu `PacketProcessing` v ktorej sa nachádzajú statické metódy na spracovanie pakety. `utils.cpp/hpp` obsahuje pomocné funkcie pre výpis pakiet a niekoľko ďalších funkcionalít.
+Tento program obsahuje súbory `argument_parser.cpp/hpp` v ktorej je implementovaná trieda `Parser`  ktorá obsahuje atribúty zodpovedajúce jednotlivých vstupných argumentom a metódy a ich spracovanie. `packet_capturing.cpp/hpp` obsahuje triedu `Sniffer` ktorá obsahuje metódy na vytvorenie filtra. Súbory `packet_processing.cpp/hpp` obsahuje triedu `PacketProcessing` v ktorej sa nachádzajú statické metódy na spracovanie pakety. `utils.cpp/hpp` obsahuje pomocné funkcie pre výpis pakiet a niekoľko ďalších funkcionalít. Súbor `terminators.cpp/hpp` implementuje triedu terminators ktorá zachytáva signále prerušenie a následne manuálne dealokuje všetky potrebné zdroje.
 
 ### Spracovanie vstupných argumentov <a name="Spracovanie-vstupných-argumentov"></a>
 
@@ -168,6 +169,10 @@ std::pair<std::string, int> Utils::parse_data(const u_char *beginning_of_section
     return std::make_pair(data, lenght);
 }
 ```
+
+## UML <a name="Uml"></a>
+
+![Alt text](pictures/UML.png "Optional title")
 
 
 ## Testovanie <a name="Testovanie"></a>
