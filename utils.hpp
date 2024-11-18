@@ -55,7 +55,7 @@ class Utils
         void parse_rdata_and_print(std::string name, uint32_t a_ttl, uint16_t a_class, uint16_t a_type, const u_char *rdata_ptr, const u_char *frame, Utils &utility_functions, parser *parse, FILE *file);
 
         /**
-         * @brief Function for parsing domain name as well as adress and domain in rdata.
+         * @brief Function for parsing domain name.
          * 
          * @param beginning_of_section Pointer to beggining of specific section (name,..).
          * @param packet_start A pointer to the start of the DNS packet (After header).
