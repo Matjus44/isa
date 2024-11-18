@@ -98,7 +98,7 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
         rdata_stream << ipv4;
         if(parse->verbose)
         {
-            std::cout << name << " " <<  a_ttl << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type)  << " " << rdata_stream.str() << std::endl;
+            std::cout << name << " " <<  std::to_string(a_ttl) << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type)  << " " << rdata_stream.str() << std::endl;
         }
         // If -d argument -> print into file
         if(!parse->domains_file.empty())
@@ -122,7 +122,7 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
 
         if(parse->verbose)
         {
-            std::cout << name << " " <<  a_ttl << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type)  << " " << rdata_stream.str() << std::endl;
+            std::cout << name << " " <<  std::to_string(a_ttl) << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type)  << " " << rdata_stream.str() << std::endl;
         }
         // If -d argument -> print into file
         if(!parse->domains_file.empty())
@@ -146,7 +146,7 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
 
         if(parse->verbose)
         {
-            std::cout << name << " " << a_ttl << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type) << " " <<  std::dec << preference << std::hex << " " << rdata_stream.str() << std::endl;
+            std::cout << name << " " << std::to_string(a_ttl) << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type) << " " <<  std::dec << preference << std::hex << " " << rdata_stream.str() << std::endl;
         }
         // If -d argument -> print into file
         if(!parse->domains_file.empty())
@@ -163,7 +163,7 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
 
         if(parse->verbose)
         {
-            std::cout << name << " " << a_ttl << " " << utility_functions.get_class_type(a_class)  << " " << utility_functions.get_record_type(a_type) << " " << rdata_stream.str() << std::endl;
+            std::cout << name << " " << std::to_string(a_ttl) << " " << utility_functions.get_class_type(a_class)  << " " << utility_functions.get_record_type(a_type) << " " << rdata_stream.str() << std::endl;
         }
         // If -d argument -> print into file
         if(!parse->domains_file.empty())
@@ -212,7 +212,7 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
 
         if(parse->verbose)
         {
-            std::cout << name << " " << a_ttl << " IN " << utility_functions.get_record_type(a_type) << " " << mname << " " << mname2
+            std::cout << name << " " << std::to_string(a_ttl) << " IN " << utility_functions.get_record_type(a_type) << " " << mname << " " << mname2
             << " " << serial_number << " " << refresh_interval << " " << retry_interval << " " << expire_limit << " " << minimum << std::endl;
         }
     }
@@ -240,7 +240,7 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
         // Verbose output to console
         if (parse->verbose)
         {
-            std::cout << name << " " << a_ttl << " " 
+            std::cout << name << " " << std::to_string(a_ttl) << " " 
                     << utility_functions.get_record_type(a_type) << " " 
                     << utility_functions.get_class_type(a_class) << " " 
                     << priority << " " 
