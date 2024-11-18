@@ -7,17 +7,17 @@
 ## Obsah
 
 1. [Úvod](#úvod)
-2. [Teória](#Teória)
-3. [Vstupné argumenty](#Vstupné-argumenty)
-4. [Implementácia](#Implementácia)
-    - [Štruktúra repozitára](#Štruktúra-repozitára)
-    - [Spracovanie vstupných argumentov](#Spracovanie-vstupných-argumentov)
-    - [Vytvorenie a spustenie filtru](#Vytvorenie-a-spustenie-filtru)
-    - [Výpis zachytených pakiet](#Výpis-zachytených-pakiet)
-5. [Ilustrovaná funkcionalita](#Ilustrovaná-funkcionalita)
-6. [UML](#Uml)
-7. [Testovanie](#Testovanie)
-8. [Bibliografia](#Bibliografia)
+2. [Teória](#teória)
+3. [Vstupné argumenty](#vstupné-argumenty)
+4. [Implementácia](#implementácia)
+    - [Štruktúra repozitára](#štruktúra-repozitára)
+    - [Spracovanie vstupných argumentov](#spracovanie-vstupných-argumentov)
+    - [Vytvorenie a spustenie filtru](#vytvorenie-a-spustenie-filtru)
+    - [Výpis zachytených pakiet](#výpis-zachytených-pakiet)
+5. [Ilustrovaná funkcionalita](#ilustrovaná-funkcionalita)
+6. [UML](#uml)
+7. [Testovanie](#testovanie)
+8. [Bibliografia](#bibliografia)
 
 ## Úvod <a name="úvod"></a>
 
@@ -25,11 +25,11 @@ Táto dokumentácia slúži ako podrobný manuál k projektu `Monitorování DNS
 
 Dokumentácia obsahuje technické detaily implementácie, spôsoby použitia aplikácie a jej funkcionalít, ako aj postupy testovania a validácie implementovaných funkcií. Okrem toho sa tu nachádzajú aj informácie o doplnkových funkciách a prípadne zdroje, ktoré boli využité pri vytváraní projektu. Informácie o zadaní projektu viz. <a name="ref1">[1]</a>.
 
-## Teória <a name="Teória"></a>
+## Teória <a name="teória"></a>
 
 DNS je jedným z základných kameňov internetu, ktorý umožňuje prevod doménových mien na IP adresy a tým aj efektívnu komunikáciu medzi zariadeniami v sieti. DNS komunikácia prebieha najčastejšie cez protokol UDP, pričom samotné DNS správy obsahujú informácie o dotazoch (query) a odpovediach (response) na zadané doménové mená. DNS správy sa skladajú z niekoľkých sekcií, ktoré obsahujú rôzne informácie potrebné na spracovanie dotazov a odpovedí, tieto sekcie sú Header, Question, Authority a Additional. Pre viacej informácií o týchto sekciách viz. <a name="ref3">[3]</a>.
 
-## Vstupné argumenty <a name="Vstupné-argumenty"></a>
+## Vstupné argumenty <a name="vstupné-argumenty"></a>
 
 Program je spúšťaný z príkazového riadka s nasledujúcimi parametrami:
 
@@ -39,21 +39,21 @@ Význam jednotlivých vstupných argumentov je špecifikovaný v zadaní viz. <a
 
 Tento program taktiež podporuje `-help` ktorý vypíše nápovedu, tento argument nesmenie byť zadaný s akýmkoľvek iným vstupným argumentom.
 
-## Implementácia <a name="Implementácia"></a>
+## Implementácia <a name="implementácia"></a>
 
-### Štruktúra repozitára <a name="Štruktúra-repozitára"></a>
+### Štruktúra repozitára <a name="štruktúra-repozitára"></a>
 
 Tento program obsahuje súbory `argument_parser.cpp/hpp` v ktorej je implementovaná trieda `Parser`  ktorá obsahuje atribúty zodpovedajúce jednotlivých vstupných argumentom a metódy a ich spracovanie. `packet_capturing.cpp/hpp` obsahuje triedu `Sniffer` ktorá obsahuje metódy na vytvorenie filtra. Súbory `packet_processing.cpp/hpp` obsahuje triedu `PacketProcessing` v ktorej sa nachádzajú statické metódy na spracovanie pakety. `utils.cpp/hpp` obsahuje pomocné funkcie pre výpis pakiet a niekoľko ďalších funkcionalít. Súbor `terminators.cpp/hpp` implementuje triedu terminators ktorá zachytáva signále prerušenie a následne manuálne dealokuje všetky potrebné zdroje.
 
-### Spracovanie vstupných argumentov <a name="Spracovanie-vstupných-argumentov"></a>
+### Spracovanie vstupných argumentov <a name="spracovanie-vstupných-argumentov"></a>
 
 Vo funkcii main sa vytvorí inštancia triedy `Parser` ktorá obsahuje metódu pre zpracovanie vstupných argumentov. Následne sa zavolá jej metóda `parser.parse(argc, argv)` ktorá berie ako parametre pole argumentov a ich počet. Táto metóda zpracuje argumenty. Vstupné argumenty sa následne ukladajú do atribútov inštačnej metódy `parser`.
 
-### Vytvorenie a spustenie filtru <a name="Vytvorenie-a-spustenie-filtru"></a>
+### Vytvorenie a spustenie filtru <a name="vytvorenie-a-spustenie-filtru"></a>
 
 Po úspešnom spracovaní vstupných argumentov sa vytvorí inštancia triedy `Sniffer` a následne sa zavolá metóda  `void run_sniffer(parser &parser)` alebo  `void run_pcap(parser &parser)` (záleží či spracovávame pakety zo vstupného súboru alebo rozhrania), ktorá berie ako parameter inštačnú triedu `parser`. AK pakety zaznamenávame z rozhrania tak sa inicializuje sniffer pomocou metódy `pcap_t* init_sniffer(parser& parser)` ktorá zahŕňa otvorenie sieťového rozhrania pomocou funkcie `pcap_open_live`. Po inicializácii sniffera sa volá metóda `void build_filter(parser& parser, pcap_t* handle)`, ktorá slúži na vytvorenie a nastavenie filtru pre zachytávanie DNS paketov. Pomocou `pcap_compile` a `pcap_setfilter` sa aplikuje filter na `handle`. Po úspešnej inicializácii a nastavení filtra sa spúšťa zachytávanie sieťových paketov volaním metódy `void capture_packets(parser &parser, pcap_t *handle)`. Táto metóda používa funkciu `pcap_loop`, ktorá kontinuálne zachytáva pakety. Pre viac popísaný význam jednotlivých funkcií filtru viz. <a name="ref1">[2]</a>.
 
-### Výpis zachytených pakiet <a name="Výpis-zachytených-pakiet"></a>
+### Výpis zachytených pakiet <a name="výpis-zachytených-pakiet"></a>
 
 Funkcia `PacketProcessing::parse_packet` je volaná v cykle, ktorý kontinuálne zachytáva pakety na základe nastavených parametrov sniffera. Najprv sa z hlavičky paketu získa časová značka, ktorá označuje čas, keď bol paket zachytený. Časová značka je formátovaná vo funkcii `void print_timestamp(const struct pcap_pkthdr *header, parser *parse)`, ktorá konvertuje čas z formátu štruktúry `pcap_pkthdr` do reťazca čitateľného pre človeka.
 
@@ -80,7 +80,7 @@ Funkcia `print_other_sections` spracováva záznamy v sekciách `Answer`, `Autho
 
 ***Funkcie su bližie definované v hlavičkových súboroch.***
 
-## Ilustrovaná funkcionalita <a name="Ilustrovaná-funkcionalita"></a>
+## Ilustrovaná funkcionalita <a name="ilustrovaná-funkcionalita"></a>
 
 **Vytvorenie filteru**
 
@@ -170,12 +170,12 @@ std::pair<std::string, int> Utils::parse_data(const u_char *beginning_of_section
 }
 ```
 
-## UML <a name="Uml"></a>
+## UML <a name="uml"></a>
 
-![Alt text](pictures/UML.png "Optional title")
+![](pictures/UML.png "Optional title")
 
 
-## Testovanie <a name="Testovanie"></a>
+## Testovanie <a name="testovanie"></a>
 
 **Testovacie prostredie:** WSL.
 
@@ -183,9 +183,8 @@ std::pair<std::string, int> Utils::parse_data(const u_char *beginning_of_section
 
 ### Record type A (Question section) 
 
-```
-2024-09-20 12:03:45 SrcIP: 2001:930:107:86a3:7c20:b664:8a1b:f323 -> DstIP: 2001:4860:4860::8888 (Q 1/0/0/0)
-```
+
+*2024-09-20 12:03:45 SrcIP: 2001:930:107:86a3:7c20:b664:8a1b:f323 -> DstIP: 2001:4860:4860::8888 (Q 1/0/0/0)*
 
 #### `verbous`
 
@@ -203,13 +202,11 @@ instagram.fist2-4.fna.fbcdn.net. IN A
 =====================================
 ```
 
-![Alt text](pictures/1.png "Optional title")
+![](pictures/1.png "Optional title")
 
 ### AAAA (Question and Answer section) 
 
-```
-2024-09-20 13:34:53 SrcIP: 2001:4860:4860::8888 -> DstIP: 2001:930:107:86a3:7c20:b664:8a1b:f323 (R 1/1/0/0)
-```
+*2024-09-20 13:34:53 SrcIP: 2001:4860:4860::8888 -> DstIP: 2001:930:107:86a3:7c20:b664:8a1b:f323 (R 1/1/0/0)*
 
 #### `verbous`
 
@@ -230,13 +227,13 @@ accounts.google.com. 20 IN AAAA 2a00:1450:4013:c14::54
 =====================================
 ```
 
-![Alt text](pictures/2.png "Optional title")
+![](pictures/2.png "Optional title")
 
 ### SOA (Authority section) A (Question section)
 
-```
-2024-09-20 12:04:33 SrcIP: 2001:4860:4860::8888 -> DstIP: 2001:930:107:86a3:7c20:b664:8a1b:f323 (R 1/0/1/0)
-```
+
+*2024-09-20 12:04:33 SrcIP: 2001:4860:4860::8888 -> DstIP: 2001:930:107:86a3:7c20:b664:8a1b:f323 (R 1/0/1/0)*
+
 
 #### `verbous`
 
@@ -257,13 +254,11 @@ wpad.hgw.local. IN A
 =====================================
 ```
 
-![Alt text](pictures/3.png "Optional title")
+![](pictures/3.png "Optional title")
 
 ### NS (Authority section), A, AAAA (Additional, Answer, Question section)
 
-```
-2024-09-25 11:55:31 SrcIP: 147.229.191.143 -> DstIP: 147.229.193.87 (R 1/1/2/4)
-```
+*2024-09-25 11:55:31 SrcIP: 147.229.191.143 -> DstIP: 147.229.193.87 (R 1/1/2/4)*
 
 #### `verbous`
 
@@ -293,13 +288,11 @@ rhino.cis.vutbr.cz. 68 IN A 147.229.3.10
 rhino.cis.vutbr.cz. 68 IN AAAA 2001:67c:1220:e000::93e5:30a
 =====================================
 ```
-![Alt text](pictures/4.png "Optional title")
+![](pictures/4.png "Optional title")
 
 ### MX (Answer and Question section), A, AAAA (Additional section), NS (Authority section)
 
-```
-2024-09-25 12:39:10 SrcIP: 147.229.191.143 -> DstIP: 147.229.193.87 (R 1/1/2/5)
-```
+*2024-09-25 12:39:10 SrcIP: 147.229.191.143 -> DstIP: 147.229.193.87 (R 1/1/2/5)*
 
 #### `verbous`
 
@@ -330,9 +323,9 @@ b.iana-servers.net 60 IN AAAA 2001:500:8d::53
 =====================================
 ```
 
-![Alt text](pictures/5.png "Optional title")
+![](pictures/5.png "Optional title")
 
-## Bibliografia <a name="Bibliografia"></a>
+## Bibliografia <a name="bibliografia"></a>
 
 [1]: Radek Hranický. (2024). Monitorování DNS komunikace , ISA Projects 2024 [online]. Publisher: Brno University of Technology. Retrieved September 20, 2024, [cit. 2024-09-25] Available at: https://www.vut.cz/studis/student.phtml?script_name=zadani_detail&apid=280945&zid=58123
 

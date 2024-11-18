@@ -1,13 +1,12 @@
 # Created by https://www.toptal.com/developers/gitignore/api/c++
 # Edit at https://www.toptal.com/developers/gitignore?templates=c++
 
-ipk-sniffer
-
 .vscode
 /env
 dns-monitor
 domains_file
 translation
+manual.pdf
 
 ### C++ ###
 # Prerequisites
