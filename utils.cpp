@@ -212,13 +212,8 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
 
         if(parse->verbose)
         {
-            std::cout << name << " " << std::dec << a_ttl << " IN " << utility_functions.get_record_type(a_type) << " " << mname << " " << mname2 << " (" << std::endl;
-            std::cout << "    " << serial_number << " ; Serial" << std::endl;
-            std::cout << "    " << refresh_interval << " ; Refresh" << std::endl;
-            std::cout << "    " << retry_interval << " ; Retry" << std::endl;
-            std::cout << "    " << expire_limit << " ; Expire" << std::endl;
-            std::cout << "    " << minimum << " ; Minimum TTL" << std::endl;
-            std::cout << ")" << std::endl;
+            std::cout << name << " " << std::dec << a_ttl << " IN " << utility_functions.get_record_type(a_type) << " " << mname << " " << mname2
+            << " " << serial_number << " " << refresh_interval << " " << retry_interval << " " << expire_limit << " " << minimum << std::endl;
         }
     }
     else if (a_type == 33)  // SRV
