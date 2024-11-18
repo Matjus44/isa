@@ -60,7 +60,7 @@ void PacketProcessing::print_ip(const u_char *frame, parser *parse)
     }
     else
     {
-        std::cout << "SrcIP: " << src_ip << " -> " << "DstIP: " << dst_ip << " ";
+        std::cout << src_ip << " -> " << dst_ip << " ";
     }
 }
 
@@ -159,13 +159,17 @@ std::pair<const u_char*, uint8_t> PacketProcessing::print_identifier_and_flags(c
         uint8_t cd = (flags >> 4) & 0x01;      // CD: 1 bit.
         uint8_t rcode = flags & 0x0F;          // RCODE: 4 bits.
         
-        std::cout << "Identifier: 0x" << std::hex << std::setw(4) << std::setfill('0') << dns_identifier << std::dec << std::endl;
+        // Výstup s prepnutím na decimálny formát po hexadecimálnom výstupe
+        std::cout << "Identifier: 0x" 
+          << std::hex << std::uppercase << std::setw(4) << std::setfill('0') << dns_identifier 
+          << std::dec << std::endl;
         std::cout << "Flags: QR=" << (int)qr << ", OPCODE=" << (int)opcode << ", AA=" << (int)aa << ", TC=" << (int)tc
                 << ", RD=" << (int)rd << ", RA=" << (int)ra << ", AD=" << (int)ad << ", CD=" << (int)cd << ", RCODE=" << (int)rcode
                 << std::endl;
     }
     return std::make_pair(dns_header, qr);
 }
+
 
 void PacketProcessing::print_dns_information(const u_char *frame, const u_char *pointer, parser *parse, uint8_t qr )
 {
@@ -202,7 +206,7 @@ void PacketProcessing::print_dns_information(const u_char *frame, const u_char *
     // Print string for better division of packets in output.
     if(parse->verbose)
     {
-        std::cout << "=====================================" << std::endl;
+        std::cout << "====================" << std::endl;
     }
 }
 
@@ -288,7 +292,7 @@ const u_char * PacketProcessing::print_other_sections(const u_char *beggining_of
 
         // Move pointer to next section.
         //Changed: local_pointer = local_pointer + lenght2 + 12 to local_pointer = local_pointer + lenght2 + lenght + 10;
-        local_pointer = local_pointer + lenght2 + lenght + 10;
+        local_pointer = local_pointer + 10 + lenght + lenght2; 
         count = count - 1; // Lower count.
     }
     next_section = local_pointer;

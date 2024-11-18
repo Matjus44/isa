@@ -98,7 +98,7 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
         rdata_stream << ipv4;
         if(parse->verbose)
         {
-            std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type)  << " " << rdata_stream.str() << std::endl;
+            std::cout << name << " " <<  std::to_string(a_ttl) << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type)  << " " << rdata_stream.str() << std::endl;
         }
         // If -d argument -> print into file
         if(!parse->domains_file.empty())
@@ -122,7 +122,7 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
 
         if(parse->verbose)
         {
-            std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type)  << " " << rdata_stream.str() << std::endl;
+            std::cout << name << " " <<  std::to_string(a_ttl) << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type)  << " " << rdata_stream.str() << std::endl;
         }
         // If -d argument -> print into file
         if(!parse->domains_file.empty())
@@ -146,7 +146,7 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
 
         if(parse->verbose)
         {
-            std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type) << " " <<  std::dec << preference << std::hex << " " << rdata_stream.str() << std::endl;
+            std::cout << name << " " << std::to_string(a_ttl) << " " << utility_functions.get_class_type(a_class) << " " << utility_functions.get_record_type(a_type) << " " <<  std::dec << preference << std::hex << " " << rdata_stream.str() << std::endl;
         }
         // If -d argument -> print into file
         if(!parse->domains_file.empty())
@@ -163,7 +163,7 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
 
         if(parse->verbose)
         {
-            std::cout << name << " " << std::dec << a_ttl << std::hex << " " << utility_functions.get_class_type(a_class)  << " " << utility_functions.get_record_type(a_type) << " " << rdata_stream.str() << std::endl;
+            std::cout << name << " " << std::to_string(a_ttl) << " " << utility_functions.get_class_type(a_class)  << " " << utility_functions.get_record_type(a_type) << " " << rdata_stream.str() << std::endl;
         }
         // If -d argument -> print into file
         if(!parse->domains_file.empty())
@@ -212,14 +212,14 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
 
         if(parse->verbose)
         {
-            std::cout << name << " " << std::dec << a_ttl << " IN " << utility_functions.get_record_type(a_type) << " " << mname << " " << mname2
+            std::cout << name << " " << std::to_string(a_ttl) << " IN " << utility_functions.get_record_type(a_type) << " " << mname << " " << mname2
             << " " << serial_number << " " << refresh_interval << " " << retry_interval << " " << expire_limit << " " << minimum << std::endl;
         }
     }
     else if (a_type == 33)  // SRV
     {
         // Extract additional information from rdata
-        uint16_t priority = ntohs(*(uint16_t *)(local_pointer));
+        uint16_t priority = ntohl(*(uint16_t *)(local_pointer));
         uint16_t weight = ntohs(*(uint16_t *)(local_pointer + 2));
         uint16_t port = ntohs(*(uint16_t *)(local_pointer + 4));
 
@@ -237,10 +237,10 @@ void Utils::parse_rdata_and_print(std::string name,uint32_t a_ttl,uint16_t a_cla
 
         if(parse->verbose)
         {
-            std::cout << name << " " << std::dec << a_ttl << std::hex << " " 
+            std::cout << name << " " << std::to_string(a_ttl) << " " 
                     << utility_functions.get_record_type(a_type) << " " 
                     << utility_functions.get_class_type(a_class) << " " 
-                    << std::dec << priority << " " 
+                    << std::to_string(priority) << " " 
                     << weight << " " 
                     << port << " " 
                     << target << std::endl;
