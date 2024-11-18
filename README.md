@@ -252,7 +252,7 @@ wpad.hgw.local. IN A
 =====================================
 ```
 
-![Alt text](pictures/4.png "Optional title")
+![Alt text](pictures/3.png "Optional title")
 
 ### NS (Authority section), A, AAAA (Additional, Answer, Question section)
 
@@ -288,7 +288,7 @@ rhino.cis.vutbr.cz. 68 IN A 147.229.3.10
 rhino.cis.vutbr.cz. 68 IN AAAA 2001:67c:1220:e000::93e5:30a
 =====================================
 ```
-![Alt text](pictures/3.png "Optional title")
+![Alt text](pictures/4.png "Optional title")
 
 ### MX (Answer and Question section), A, AAAA (Additional section), NS (Authority section)
 
